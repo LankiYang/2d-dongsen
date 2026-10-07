@@ -1,0 +1,1227 @@
+{
+  "// 说明": "每个键是一个图集；scale 0.5 = 把 480 格密度的素材表统一到 240 格密度（全游戏的基准密度）",
+  "chars": [
+    {
+      "raw": "a_farmer_walk",
+      "anchor": "bottom",
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "walk_down_0",
+        "walk_down_1",
+        "walk_down_2",
+        "walk_down_3",
+        "walk_up_0",
+        "walk_up_1",
+        "walk_up_2",
+        "walk_up_3"
+      ]
+    },
+    {
+      "raw": "ws_farmer",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 34,
+      "alignFacing": true,
+      "names": [
+        "walk_side_0",
+        "walk_side_1",
+        "walk_side_2",
+        "walk_side_3"
+      ]
+    },
+    {
+      "raw": "a_diver_swim",
+      "anchor": "center",
+      "names": [
+        "swim_0",
+        "swim_1",
+        "swim_2",
+        "swim_3"
+      ]
+    }
+  ],
+  "island": [
+    {
+      "raw": "ac_n_trees",
+      "scale": 1,
+      "gap": 2,
+      "names": [
+        "palm_a",
+        "palm_b",
+        "tree_round",
+        "tree_mango"
+      ]
+    },
+    {
+      "raw": "ac_n_plants",
+      "scale": 0.55,
+      "gap": 2,
+      "names": [
+        "bush_hibiscus",
+        "bush_bougain",
+        "shrub",
+        null,
+        "banana",
+        "grass_tall"
+      ],
+      "holes": [
+        "banana"
+      ],
+      "holesMin": 3
+    },
+    {
+      "raw": "ac_n_fern",
+      "scale": 0.28,
+      "gap": 2,
+      "pick": [
+        2
+      ],
+      "names": [
+        "fern"
+      ]
+    },
+    {
+      "raw": "s_props",
+      "scale": 0.5,
+      "names": [
+        "barrel",
+        "crates",
+        "ship_bin",
+        "well",
+        "lantern",
+        "mailbox",
+        "sign",
+        "fish_rack",
+        "wheelbarrow",
+        "flower_pot",
+        "fish_basket",
+        "campfire",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "holes": [
+        "well",
+        "fish_rack"
+      ]
+    },
+    {
+      "raw": "ac_n_rocks",
+      "scale": 0.5,
+      "gap": 2,
+      "pick": [
+        0,
+        1
+      ],
+      "names": [
+        "boulder",
+        "rock_moss"
+      ]
+    },
+    {
+      "raw": "ac_n_rocks",
+      "scale": 0.4,
+      "gap": 2,
+      "pick": [
+        3,
+        4,
+        5
+      ],
+      "names": [
+        "conch",
+        "starfish",
+        "driftwood"
+      ]
+    },
+    {
+      "raw": "ac_n_rocks",
+      "scale": 0.12,
+      "gap": 2,
+      "pick": [
+        2
+      ],
+      "names": [
+        "pebbles"
+      ]
+    },
+    {
+      "raw": "s_boat",
+      "scale": 0.5,
+      "single": "boat"
+    },
+    {
+      "raw": "s_fence",
+      "names": [
+        "fence_post",
+        "fence_h",
+        "fence_v",
+        "fence_corner",
+        "fence_gate"
+      ],
+      "holes": [
+        "fence_h",
+        "fence_corner",
+        "fence_gate"
+      ]
+    },
+    {
+      "raw": "hf_thatch",
+      "scale": 0.4,
+      "single": "house_thatch"
+    },
+    {
+      "raw": "hf_blue",
+      "scale": 0.4,
+      "single": "house_blue"
+    },
+    {
+      "raw": "hf_stilt",
+      "scale": 0.4,
+      "single": "house_stilt",
+      "holes": [
+        "house_stilt"
+      ]
+    },
+    {
+      "raw": "hf_stone",
+      "scale": 0.4,
+      "single": "house_stone"
+    },
+    {
+      "raw": "hf_huashen",
+      "scale": 0.4,
+      "single": "house"
+    },
+    {
+      "raw": "hf_stall",
+      "scale": 0.4,
+      "single": "stall",
+      "holes": [
+        "stall"
+      ]
+    },
+    {
+      "raw": "hf_seedshop",
+      "scale": 0.4,
+      "single": "seedshop",
+      "holes": [
+        "seedshop"
+      ]
+    },
+    {
+      "raw": "hf_restaurant",
+      "scale": 0.4,
+      "single": "restaurant",
+      "holes": [
+        "restaurant"
+      ]
+    },
+    {
+      "raw": "s_lighthouse",
+      "scale": 0.4,
+      "gap": 4,
+      "names": [
+        "lighthouse_ruin",
+        "lighthouse"
+      ]
+    },
+    {
+      "raw": "s_ferry",
+      "scale": 0.55,
+      "single": "ferry",
+      "holes": [
+        "ferry"
+      ],
+      "holesMin": 100
+    },
+    {
+      "raw": "s_market",
+      "scale": 0.8,
+      "gap": 3,
+      "pick": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "names": [
+        "market_green",
+        "market_blue",
+        "market_teal",
+        "market_orange"
+      ]
+    },
+    {
+      "raw": "s_market",
+      "scale": 0.36,
+      "gap": 3,
+      "pick": [
+        2,
+        5
+      ],
+      "names": [
+        "project_board",
+        "donation_box"
+      ]
+    },
+    {
+      "raw": "ac_n_flowers",
+      "scale": 0.34,
+      "gap": 2,
+      "names": [
+        "flower_tulip",
+        "flower_cosmos",
+        "flower_pansy",
+        "flower_rose",
+        "flower_hyacinth",
+        "flower_windflower"
+      ],
+      "holes": [
+        "flower_tulip",
+        "flower_cosmos",
+        "flower_pansy",
+        "flower_rose",
+        "flower_hyacinth",
+        "flower_windflower"
+      ]
+    },
+    {
+      "raw": "ac_house",
+      "scale": 0.82,
+      "single": "ac_house"
+    }
+  ],
+  "crops": [
+    {
+      "raw": "c2_rice",
+      "gap": 1,
+      "names": [
+        "rice_1",
+        "rice_2",
+        "rice_3",
+        "rice_4"
+      ],
+      "scale": 0.5,
+      "holes": [
+        "rice_4"
+      ]
+    },
+    {
+      "raw": "c2_cucumber",
+      "gap": 1,
+      "names": [
+        "cucumber_1",
+        "cucumber_2",
+        "cucumber_3",
+        "cucumber_4"
+      ],
+      "scale": 0.5
+    },
+    {
+      "raw": "c2_tomato",
+      "gap": 1,
+      "names": [
+        "tomato_1",
+        "tomato_2",
+        "tomato_3",
+        "tomato_4"
+      ],
+      "scale": 0.5
+    },
+    {
+      "raw": "c2_pumpkin",
+      "gap": 1,
+      "names": [
+        "pumpkin_1",
+        "pumpkin_2",
+        "pumpkin_3",
+        "pumpkin_4"
+      ],
+      "scale": 0.5,
+      "holes": [
+        "pumpkin_3"
+      ]
+    },
+    {
+      "raw": "c2_strawberry",
+      "gap": 1,
+      "names": [
+        "strawberry_1",
+        "strawberry_2",
+        "strawberry_3",
+        "strawberry_4",
+        null,
+        null,
+        null,
+        null
+      ],
+      "scale": 0.5
+    }
+  ],
+  "sea": [
+    {
+      "raw": "d_fishsheet",
+      "anchor": "center",
+      "names": [
+        "clownfish",
+        "tang",
+        "butterflyfish",
+        "snapper",
+        "bream",
+        "mackerel",
+        "bonito",
+        "tuna",
+        "grouper"
+      ],
+      "gap": 1
+    },
+    {
+      "raw": "f_reef",
+      "anchor": "center",
+      "names": [
+        "pufferfish",
+        "lionfish",
+        "parrotfish",
+        "idol",
+        "horse_mackerel",
+        "flounder",
+        "bluefish",
+        "amberjack",
+        "seahorse",
+        "cuttlefish"
+      ],
+      "gap": 1
+    },
+    {
+      "raw": "f_big",
+      "anchor": "center",
+      "names": [
+        "turtle",
+        "moray",
+        "octopus",
+        "jelly_pink",
+        "jelly_blue",
+        "shark_pup",
+        "blue_shark",
+        "reef_shark"
+      ],
+      "gap": 1
+    },
+    {
+      "raw": "s_coral",
+      "scale": 0.5,
+      "names": [
+        "coral_pink",
+        "coral_orange",
+        "seafan",
+        "brain_coral",
+        "staghorn",
+        "sponge",
+        "anemone_green",
+        "anemone_purple",
+        "urchin",
+        "clam",
+        "rock_small",
+        "boulder_moss",
+        "seagrass",
+        "kelp",
+        "glow_plant",
+        "glow_mushroom",
+        "chest",
+        "amphora"
+      ],
+      "holes": [
+        "seafan",
+        "coral_pink",
+        "kelp",
+        "seagrass",
+        "amphora"
+      ]
+    },
+    {
+      "raw": "s_boat_side",
+      "scale": 0.5,
+      "anchor": "bottom",
+      "single": "boat_side",
+      "holes": [
+        "boat_side"
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "raw": "i_items",
+      "anchor": "center",
+      "names": [
+        "hoe",
+        "watering_can",
+        "harpoon",
+        "seed_bag",
+        "rice",
+        "cucumber",
+        "tomato",
+        "pumpkin",
+        "strawberry",
+        "coins",
+        "oxygen",
+        "net",
+        "axe",
+        "pickaxe",
+        "sushi",
+        "heart"
+      ],
+      "gap": 1,
+      "holes": [
+        "watering_can",
+        "harpoon",
+        "net"
+      ]
+    },
+    {
+      "raw": "i_seeds",
+      "anchor": "center",
+      "gap": 1,
+      "names": [
+        "seed_rice",
+        "seed_cucumber",
+        "seed_tomato",
+        "seed_strawberry",
+        "seed_pumpkin"
+      ],
+      "scale": 0.62
+    },
+    {
+      "raw": "i_dishes",
+      "anchor": "center",
+      "gap": 1,
+      "scale": 0.55,
+      "names": [
+        "sashimi",
+        "nigiri",
+        "kappa",
+        "kaisendon",
+        "tempura",
+        "daifuku",
+        "toro",
+        "tomato_salad"
+      ]
+    },
+    {
+      "raw": "i_story",
+      "anchor": "center",
+      "gap": 3,
+      "scale": 0.55,
+      "names": [
+        "q_watch",
+        "q_knife",
+        "q_photo",
+        "q_chronicle"
+      ],
+      "holes": [
+        "q_watch"
+      ],
+      "holesMin": 6
+    }
+  ],
+  "portraits": [
+    {
+      "raw": "p_ahai",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "ahai_0",
+        "ahai_1"
+      ]
+    },
+    {
+      "raw": "p_huashen",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "huashen_0",
+        "huashen_1"
+      ]
+    },
+    {
+      "raw": "p_laopan",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "laopan_0",
+        "laopan_1"
+      ]
+    },
+    {
+      "raw": "p_xiaoshan",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "xiaoshan_0",
+        "xiaoshan_1"
+      ]
+    },
+    {
+      "raw": "p_zhoushu",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "zhoushu_0",
+        "zhoushu_1"
+      ]
+    },
+    {
+      "raw": "p_alan",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "alan_0",
+        "alan_1"
+      ]
+    },
+    {
+      "raw": "p_doudou",
+      "anchor": "bottom",
+      "gap": 4,
+      "minArea": 40,
+      "names": [
+        "doudou_0",
+        "doudou_1"
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "raw": "w_ahai",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "ahai_down_0",
+        "ahai_down_1",
+        "ahai_down_2",
+        "ahai_down_3",
+        "ahai_up_0",
+        "ahai_up_1",
+        "ahai_up_2",
+        "ahai_up_3"
+      ]
+    },
+    {
+      "raw": "w_huashen",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "huashen_down_0",
+        "huashen_down_1",
+        "huashen_down_2",
+        "huashen_down_3",
+        "huashen_up_0",
+        "huashen_up_1",
+        "huashen_up_2",
+        "huashen_up_3"
+      ],
+      "scale": 0.92
+    },
+    {
+      "raw": "w_laopan",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "laopan_down_0",
+        "laopan_down_1",
+        "laopan_down_2",
+        "laopan_down_3",
+        "laopan_up_0",
+        "laopan_up_1",
+        "laopan_up_2",
+        "laopan_up_3"
+      ]
+    },
+    {
+      "raw": "w_xiaoshan",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "xiaoshan_down_0",
+        "xiaoshan_down_1",
+        "xiaoshan_down_2",
+        "xiaoshan_down_3",
+        "xiaoshan_up_0",
+        "xiaoshan_up_1",
+        "xiaoshan_up_2",
+        "xiaoshan_up_3"
+      ]
+    },
+    {
+      "raw": "ws_ahai",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 36,
+      "alignFacing": true,
+      "names": [
+        "ahai_side_0",
+        "ahai_side_1",
+        "ahai_side_2",
+        "ahai_side_3"
+      ]
+    },
+    {
+      "raw": "ws_huashen",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 37,
+      "alignFacing": true,
+      "names": [
+        "huashen_side_0",
+        "huashen_side_1",
+        "huashen_side_2",
+        "huashen_side_3"
+      ]
+    },
+    {
+      "raw": "ws_laopan",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 36,
+      "alignFacing": true,
+      "names": [
+        "laopan_side_0",
+        "laopan_side_1",
+        "laopan_side_2",
+        "laopan_side_3"
+      ]
+    },
+    {
+      "raw": "ws_xiaoshan",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 34,
+      "alignFacing": true,
+      "names": [
+        "xiaoshan_side_0",
+        "xiaoshan_side_1",
+        "xiaoshan_side_2",
+        "xiaoshan_side_3"
+      ]
+    },
+    {
+      "raw": "w_guests",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "names": [
+        "guest_kid_down",
+        "guest_kid_down2",
+        "guest_kid_up",
+        "guest_kid_side"
+      ]
+    },
+    {
+      "raw": "w_guests",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        5,
+        6,
+        7
+      ],
+      "fitH": 36,
+      "names": [
+        "guest_granny_down",
+        "guest_granny_up",
+        "guest_granny_side"
+      ]
+    },
+    {
+      "raw": "w_guests",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "guest_sailor_down",
+        "guest_sailor_down2",
+        "guest_sailor_up",
+        "guest_sailor_side"
+      ]
+    },
+    {
+      "raw": "w_zhoushu",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "zhoushu_down_0",
+        "zhoushu_down_1",
+        "zhoushu_down_2",
+        "zhoushu_down_3",
+        "zhoushu_up_0",
+        "zhoushu_up_1",
+        "zhoushu_up_2",
+        "zhoushu_up_3"
+      ]
+    },
+    {
+      "raw": "ws_zhoushu",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 36,
+      "alignFacing": true,
+      "names": [
+        "zhoushu_side_0",
+        "zhoushu_side_1",
+        "zhoushu_side_2",
+        "zhoushu_side_3"
+      ]
+    },
+    {
+      "raw": "w_alan",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "alan_down_0",
+        "alan_down_1",
+        "alan_down_2",
+        "alan_down_3",
+        "alan_up_0",
+        "alan_up_1",
+        "alan_up_2",
+        "alan_up_3"
+      ]
+    },
+    {
+      "raw": "ws_alan",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 36,
+      "alignFacing": true,
+      "names": [
+        "alan_side_0",
+        "alan_side_1",
+        "alan_side_2",
+        "alan_side_3"
+      ]
+    },
+    {
+      "raw": "w_doudou",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        8,
+        9,
+        10,
+        11
+      ],
+      "fitH": 29,
+      "names": [
+        "doudou_down_0",
+        "doudou_down_1",
+        "doudou_down_2",
+        "doudou_down_3",
+        "doudou_up_0",
+        "doudou_up_1",
+        "doudou_up_2",
+        "doudou_up_3"
+      ]
+    },
+    {
+      "raw": "ws_doudou",
+      "anchor": "bottom",
+      "gap": 1,
+      "pick": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fitH": 29,
+      "alignFacing": true,
+      "names": [
+        "doudou_side_0",
+        "doudou_side_1",
+        "doudou_side_2",
+        "doudou_side_3"
+      ]
+    }
+  ],
+  "decor": [
+    {
+      "raw": "s_decor",
+      "scale": 0.5,
+      "gap": 3,
+      "pick": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "names": [
+        "laundry",
+        "bench",
+        "planter",
+        "woodpile",
+        "water_barrel",
+        "notice_board",
+        "hammock",
+        "beehive",
+        "coop",
+        "well_front",
+        "stone_lantern",
+        "potted_palm",
+        "surfboard",
+        "lounge_chair",
+        "veggie_patch"
+      ],
+      "holes": [
+        "bench",
+        "lounge_chair",
+        "hammock",
+        "well_front",
+        "water_barrel"
+      ]
+    },
+    {
+      "raw": "s_decor",
+      "scale": 0.38,
+      "gap": 3,
+      "pick": [
+        9,
+        10,
+        11
+      ],
+      "names": [
+        "chicken_white",
+        "chicken_brown",
+        "cat"
+      ]
+    },
+    {
+      "raw": "s_waystone",
+      "scale": 0.24,
+      "gap": 3,
+      "names": [
+        "waystone",
+        "waystone_bell",
+        "waystone_crystal"
+      ]
+    }
+  ],
+  "interior": [
+    {
+      "raw": "s_kitchen",
+      "scale": 0.55,
+      "gap": 3,
+      "names": [
+        "counter",
+        "stool",
+        "board",
+        "rice_cooker",
+        "fryer",
+        "icebox",
+        "sake_shelf",
+        "fish_tank",
+        "bamboo",
+        "lantern_red",
+        "menu_board",
+        "register",
+        "plates",
+        "tea_station",
+        "bonsai"
+      ],
+      "holes": [
+        "stool",
+        "bamboo",
+        "bonsai"
+      ]
+    }
+  ],
+  "furniture": [
+    {
+      "raw": "s_furniture_a",
+      "scale": 0.55,
+      "gap": 3,
+      "names": [
+        "bed",
+        "table",
+        "chair",
+        "chest",
+        "wardrobe",
+        "bookshelf",
+        "round_table",
+        "armchair",
+        "stove",
+        "dresser",
+        "monstera",
+        "floor_lamp",
+        "nightstand",
+        "rocking_chair",
+        "side_table",
+        "desk"
+      ],
+      "holes": [
+        "chair",
+        "rocking_chair",
+        "table",
+        "round_table",
+        "desk",
+        "side_table",
+        "monstera"
+      ]
+    },
+    {
+      "raw": "s_furniture_b",
+      "scale": 0.55,
+      "gap": 3,
+      "names": [
+        "rug_round",
+        "rug_fish",
+        "rug_leaf",
+        "doormat",
+        "rug_stripe",
+        "painting_sunset",
+        "clock",
+        "wall_shelf",
+        "window",
+        "fishnet",
+        "ship_wheel",
+        "herbs",
+        "painting_lighthouse",
+        "fish_trophy",
+        "mirror"
+      ],
+      "holes": [
+        "fishnet",
+        "ship_wheel",
+        "herbs"
+      ]
+    }
+  ],
+  "island_hd": [
+    {
+      "raw": "hd_trees",
+      "names": [
+        "palm_a",
+        "palm_b",
+        "tree_round",
+        "tree_mango"
+      ],
+      "heights": [
+        75,
+        62,
+        61,
+        58
+      ]
+    },
+    {
+      "raw": "hd_plants",
+      "names": [
+        "bush_hibiscus",
+        "bush_bougain",
+        "shrub",
+        "fern",
+        "banana",
+        "grass_tall"
+      ],
+      "heights": [
+        35,
+        35,
+        33,
+        29,
+        37,
+        30
+      ],
+      "holes": 800
+    },
+    {
+      "raw": "hd_flowers",
+      "names": [
+        "flower_tulip",
+        "flower_cosmos",
+        "flower_pansy",
+        "flower_rose",
+        "flower_hyacinth",
+        "flower_windflower"
+      ],
+      "heights": [
+        20,
+        21,
+        20,
+        21,
+        21,
+        20
+      ],
+      "holes": 800
+    },
+    {
+      "raw": "hd_rocks",
+      "names": [
+        "boulder",
+        "rock_moss",
+        "pebbles",
+        "conch",
+        "starfish",
+        "driftwood"
+      ],
+      "heights": [
+        26,
+        27,
+        9,
+        19,
+        21,
+        17
+      ]
+    },
+    {
+      "raw": "hd_house",
+      "names": [
+        "ac_house"
+      ],
+      "heights": [
+        100
+      ]
+    }
+  ]
+}

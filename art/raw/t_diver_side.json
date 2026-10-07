@@ -1,0 +1,10 @@
+{
+  "name": "t_diver_side",
+  "style": "SEA",
+  "grid": "48x24",
+  "refs": [
+    "art/raw/key_sea_a.png"
+  ],
+  "prompt": "A single small scuba diver game sprite swimming horizontally, body stretched out, full side view facing right: black wetsuit, yellow air tank on the back, orange fins, round diving mask, chibi proportions. Only this one character, nothing else",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A single small scuba diver game sprite swimming horizontally, body stretched out, full side view facing right: black wetsuit, yellow air tank on the back, orange fins, round diving mask, chibi proportions. Only this one character, nothing else. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, pure side view, facing right, underwater creature, drawn on a 48x24 pixel grid so each art pixel is a large visible square. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "bg_deep",
+  "style": "SCENE",
+  "bg": "scene",
+  "refs": [
+    "art/raw/key_sea_b.png"
+  ],
+  "prompt": "A wide empty underwater background plate for a side-scrolling diving game, to be used as a distant parallax layer for the deep zone: dark indigo water, towering distant cliff silhouettes of a blue hole on both sides, faint glowing specks, very low contrast. Absolutely no fish, no creatures, no diver, no shipwreck",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A wide empty underwater background plate for a side-scrolling diving game, to be used as a distant parallax layer for the deep zone: dark indigo water, towering distant cliff silhouettes of a blue hole on both sides, faint glowing specks, very low contrast. Absolutely no fish, no creatures, no diver, no shipwreck. beautiful detailed pixel art game background, modern indie game quality, rich atmospheric lighting, crisp pixels, no text, no UI, no characters."
+}

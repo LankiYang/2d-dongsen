@@ -1,0 +1,9 @@
+{
+  "name": "i_seeds",
+  "style": "ICON",
+  "refs": [
+    "art/raw/i_items.png"
+  ],
+  "prompt": "LOW RESOLUTION pixel art sprite sheet of 5 seed packet inventory icons in exactly the same style and pixel size as the icons in the reference, one row with generous empty white space between them. Each is a small paper seed packet with a picture of its crop printed on the front: 1) rice (golden rice ears), 2) cucumber (green cucumber), 3) tomato (red tomato), 4) strawberry (red strawberry), 5) pumpkin (orange pumpkin). No text, no labels",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). LOW RESOLUTION pixel art sprite sheet of 5 seed packet inventory icons in exactly the same style and pixel size as the icons in the reference, one row with generous empty white space between them. Each is a small paper seed packet with a picture of its crop printed on the front: 1) rice (golden rice ears), 2) cucumber (green cucumber), 3) tomato (red tomato), 4) strawberry (red strawberry), 5) pumpkin (orange pumpkin). No text, no labels. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, single inventory icon, centered, chunky and readable at small size. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

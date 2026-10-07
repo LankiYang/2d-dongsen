@@ -1,0 +1,10 @@
+{
+  "name": "t_fish_snapper",
+  "style": "SEA",
+  "grid": "32x20",
+  "refs": [
+    "art/raw/key_sea_a.png"
+  ],
+  "prompt": "A single red snapper fish game sprite, full side view facing right, whole body visible with tail fin. Only this one fish, nothing else",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A single red snapper fish game sprite, full side view facing right, whole body visible with tail fin. Only this one fish, nothing else. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, pure side view, facing right, underwater creature, drawn on a 32x20 pixel grid so each art pixel is a large visible square. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

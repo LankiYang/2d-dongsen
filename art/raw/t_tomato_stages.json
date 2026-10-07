@@ -1,0 +1,10 @@
+{
+  "name": "t_tomato_stages",
+  "style": "LAND",
+  "grid": "80x24",
+  "refs": [
+    "art/raw/key_island_a.png"
+  ],
+  "prompt": "A horizontal sprite strip of 5 growth stages of a tomato plant for a farming game, left to right: seed mound, small sprout, young leafy plant, flowering plant, mature plant with ripe red tomatoes. Evenly spaced in one row, same baseline, each stage separated by empty white space",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A horizontal sprite strip of 5 growth stages of a tomato plant for a farming game, left to right: seed mound, small sprout, young leafy plant, flowering plant, mature plant with ripe red tomatoes. Evenly spaced in one row, same baseline, each stage separated by empty white space. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, three-quarter top-down view like a farming game, grounded object, drawn on a 80x24 pixel grid so each art pixel is a large visible square. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

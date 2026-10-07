@@ -1,0 +1,9 @@
+{
+  "name": "f_reef",
+  "style": "SEA",
+  "refs": [
+    "art/raw/d_fishsheet.png"
+  ],
+  "prompt": "A sprite sheet of 8 more reef creatures for a diving game in exactly the same style and pixel scale as the reference: a spiky pufferfish, a lionfish with long striped fins, a parrotfish, a moorish idol, a yellowtail amberjack, a flounder, a small sea horse, a cuttlefish. Arranged in 2 rows of 4 with generous empty white space between every creature, each full side view facing right, no labels",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A sprite sheet of 8 more reef creatures for a diving game in exactly the same style and pixel scale as the reference: a spiky pufferfish, a lionfish with long striped fins, a parrotfish, a moorish idol, a yellowtail amberjack, a flounder, a small sea horse, a cuttlefish. Arranged in 2 rows of 4 with generous empty white space between every creature, each full side view facing right, no labels. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, pure side view, facing right, underwater creature. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

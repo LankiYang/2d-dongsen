@@ -1,0 +1,58 @@
+[
+  {
+    "name": "hf_thatch",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A cozy wooden cottage with a tall thick golden thatched roof, a green front door in the middle of the facade with stone steps, one shuttered window on each side with flower boxes, a lantern by the door. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  },
+  {
+    "name": "hf_blue",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A white-washed fisherman cottage with a blue glazed tile roof, a round porthole window above a wooden front door in the middle, one small window on each side, a fishing net and an orange life ring hanging on the wall. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  },
+  {
+    "name": "hf_stilt",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A bamboo house raised on short wooden stilts with a layered palm-leaf roof, a front porch with a short wooden stair in the middle leading to the door, woven bamboo walls, a shell wind chime. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  },
+  {
+    "name": "hf_stone",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A small stone cottage with a red clay tile roof and a brick chimney, an arched wooden front door in the middle with a step, one window with warm light on each side, climbing flowering vines on one corner. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  },
+  {
+    "name": "hf_huashen",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A larger two-window farmhouse with a warm brown wooden shingle roof and a small attic window, a covered front porch with two wooden posts in front of the door, hanging flower baskets, a small bench on the porch. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  },
+  {
+    "name": "hf_stall",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A small open-front wooden fish market stall with a red and cream striped cloth awning facing the viewer, a counter with crushed ice and fresh fish in the middle, a hanging paper lantern, a small chalkboard without readable text leaning on the side. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  },
+  {
+    "name": "hf_seedshop",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_test.png"
+    ],
+    "prompt": "A small open-front wooden seed shop stall with a green and white striped cloth awning facing the viewer, shelves of seed packets and burlap sacks, potted seedlings and a watering can on the counter, a hanging wooden sign without readable text. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. The building is drawn small, occupying only about the middle 45% of the image width, surrounded by plenty of empty white space. Only this one building, nothing else around it"
+  }
+]

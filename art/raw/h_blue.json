@@ -1,0 +1,9 @@
+{
+  "name": "h_blue",
+  "style": "LAND",
+  "refs": [
+    "art/raw/s_house.png"
+  ],
+  "prompt": "A single building sprite for a tropical island farming game, same pixel scale and style as the reference: a white-washed fisherman's cottage with a blue glazed tile roof, a round porthole window, a wooden front door with a step, a fishing net hanging on the wall, a small lantern. Three-quarter top-down view, the front door faces the viewer. Only this one building, nothing else around it",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A single building sprite for a tropical island farming game, same pixel scale and style as the reference: a white-washed fisherman's cottage with a blue glazed tile roof, a round porthole window, a wooden front door with a step, a fishing net hanging on the wall, a small lantern. Three-quarter top-down view, the front door faces the viewer. Only this one building, nothing else around it. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, three-quarter top-down view like a farming game, grounded object. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

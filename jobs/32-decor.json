@@ -1,0 +1,18 @@
+[
+  {
+    "name": "hf_huashen",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_stone.png"
+    ],
+    "prompt": "A cozy two-storey farmhouse, clearly different from a thatched hut: warm brown wooden shingle roof with a small dormer window, cream painted wooden walls, a covered front porch with two wooden posts in front of a green front door in the middle, hanging baskets of flowers, a small bench on the porch, a big window on each side. Straight-on FRONT VIEW exactly like Stardew Valley buildings: the facade faces the viewer directly and is parallel to the bottom edge of the image, NOT isometric, NOT rotated, the side walls are NOT visible, the roof is seen from slightly above so its top surface shows. Only this one building, nothing else around it"
+  },
+  {
+    "name": "s_decor",
+    "style": "CORE",
+    "refs": [
+      "art/raw/hf_thatch.png"
+    ],
+    "prompt": "A sprite sheet of village yard decorations for a cozy island farming game, all drawn in straight-on FRONT VIEW like Stardew Valley (not isometric, not angled) and at the SAME pixel scale as each other, arranged in 3 rows of 6 with generous empty white space between every item. Row 1: a laundry line with colorful clothes hanging between two wooden posts, a wooden park bench, a long wooden planter box full of blooming flowers, a stacked firewood pile, a wooden rain water barrel, a wooden notice board with pinned papers without readable text. Row 2: a rope hammock between two short posts, a white wooden beehive box, a small wooden chicken coop, a white chicken, a brown chicken, a sleeping orange cat curled up. Row 3: a stone water well with a small wooden roof and bucket, a stone garden lantern, a small palm in a clay pot, a surfboard leaning on a post, a wooden beach lounge chair, a small vegetable patch with rows of lettuce. No ground shadows, no labels"
+  }
+]

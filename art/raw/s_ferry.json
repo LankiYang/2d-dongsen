@@ -1,0 +1,9 @@
+{
+  "name": "s_ferry",
+  "style": "CORE",
+  "refs": [
+    "art/raw/s_boat.png"
+  ],
+  "prompt": "A single cozy passenger ferry boat for a pixel art island game, drawn in the same style, outline and pixel scale as the reference boat but about twice as long: pure SIDE VIEW facing left, white hull with a red stripe and a navy bottom, a small two deck cabin with round portholes and a little wheelhouse, a short red chimney, a string of colorful flags from the mast to the bow, life rings on the railing, sitting on the water line. Only the boat, no water, no text",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A single cozy passenger ferry boat for a pixel art island game, drawn in the same style, outline and pixel scale as the reference boat but about twice as long: pure SIDE VIEW facing left, white hull with a red stripe and a navy bottom, a small two deck cabin with round portholes and a little wheelhouse, a short red chimney, a string of colorful flags from the mast to the bow, life rings on the railing, sitting on the water line. Only the boat, no water, no text. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

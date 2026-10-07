@@ -1,0 +1,9 @@
+{
+  "name": "s_boat",
+  "style": "LAND",
+  "refs": [
+    "art/raw/key_island_a.png"
+  ],
+  "prompt": "A single sprite of a small wooden diving boat seen from a three-quarter top-down view, pointing to the right: blue and white painted hull, small cabin, a yellow scuba tank and a coiled rope on deck, a little flag. Only this one boat, no water under it, nothing else",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A single sprite of a small wooden diving boat seen from a three-quarter top-down view, pointing to the right: blue and white painted hull, small cabin, a yellow scuba tank and a coiled rope on deck, a little flag. Only this one boat, no water under it, nothing else. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, three-quarter top-down view like a farming game, grounded object. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

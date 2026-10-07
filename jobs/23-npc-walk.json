@@ -1,0 +1,38 @@
+[
+  {
+    "name": "w_ahai",
+    "style": "LAND",
+    "refs": [
+      "art/raw/a_farmer_walk.png",
+      "art/raw/n_sheet.png"
+    ],
+    "prompt": "LOW RESOLUTION pixel art character sprite sheet of ONE character: the 1st villager: the old fisherman (white beard, weathered tan skin, blue bandana, blue and white striped shirt with rolled-up sleeves, brown rubber apron, boots) from the second reference image, redrawn at EXACTLY the same pixel size, height and chibi proportions as the farmer in the first reference image. Same layout as the first reference: a grid of 3 rows and 4 columns on a white background. Row 1: 4-frame walk cycle facing the camera. Row 2: 4-frame walk cycle facing left. Row 3: 4-frame walk cycle facing away from the camera (back view). All 12 frames the same size, evenly spaced, generous white gaps, no labels, no grid lines"
+  },
+  {
+    "name": "w_huashen",
+    "style": "LAND",
+    "refs": [
+      "art/raw/a_farmer_walk.png",
+      "art/raw/n_sheet.png"
+    ],
+    "prompt": "LOW RESOLUTION pixel art character sprite sheet of ONE character: the 2nd villager: the plump cheerful farm woman (wide straw sun hat with a pink flower, brown hair, green dress, floral apron) from the second reference image, redrawn at EXACTLY the same pixel size, height and chibi proportions as the farmer in the first reference image. Same layout as the first reference: a grid of 3 rows and 4 columns on a white background. Row 1: 4-frame walk cycle facing the camera. Row 2: 4-frame walk cycle facing left. Row 3: 4-frame walk cycle facing away from the camera (back view). All 12 frames the same size, evenly spaced, generous white gaps, no labels, no grid lines"
+  },
+  {
+    "name": "w_laopan",
+    "style": "LAND",
+    "refs": [
+      "art/raw/a_farmer_walk.png",
+      "art/raw/n_sheet.png"
+    ],
+    "prompt": "LOW RESOLUTION pixel art character sprite sheet of ONE character: the 3rd villager: the stocky boat captain (white captain cap with gold badge, navy double-breasted peacoat, grey trousers, grey stubble, pipe) from the second reference image, redrawn at EXACTLY the same pixel size, height and chibi proportions as the farmer in the first reference image. Same layout as the first reference: a grid of 3 rows and 4 columns on a white background. Row 1: 4-frame walk cycle facing the camera. Row 2: 4-frame walk cycle facing left. Row 3: 4-frame walk cycle facing away from the camera (back view). All 12 frames the same size, evenly spaced, generous white gaps, no labels, no grid lines"
+  },
+  {
+    "name": "w_xiaoshan",
+    "style": "LAND",
+    "refs": [
+      "art/raw/a_farmer_walk.png",
+      "art/raw/n_sheet.png"
+    ],
+    "prompt": "LOW RESOLUTION pixel art character sprite sheet of ONE character: the 4th villager: the young female diving instructor (short black bob, goggles on forehead, grey tank top, black wetsuit tied at the waist, black wetsuit legs) from the second reference image, redrawn at EXACTLY the same pixel size, height and chibi proportions as the farmer in the first reference image. Same layout as the first reference: a grid of 3 rows and 4 columns on a white background. Row 1: 4-frame walk cycle facing the camera. Row 2: 4-frame walk cycle facing left. Row 3: 4-frame walk cycle facing away from the camera (back view). All 12 frames the same size, evenly spaced, generous white gaps, no labels, no grid lines"
+  }
+]

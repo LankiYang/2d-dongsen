@@ -1,0 +1,9 @@
+{
+  "name": "s_boat_side",
+  "style": "SEA",
+  "refs": [
+    "art/raw/key_sea_a.png"
+  ],
+  "prompt": "A single sprite of a small wooden diving boat seen in pure side view (profile), facing right, floating: the entire hull is visible including the rounded part that would be below the waterline, blue and white painted planks, a small wooden wheelhouse cabin with a window, a metal ladder hanging off the side, two yellow scuba tanks and a coiled rope on deck, a little red and white dive flag on a short mast. No water drawn, only the boat",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A single sprite of a small wooden diving boat seen in pure side view (profile), facing right, floating: the entire hull is visible including the rounded part that would be below the waterline, blue and white painted planks, a small wooden wheelhouse cabin with a window, a metal ladder hanging off the side, two yellow scuba tanks and a coiled rope on deck, a little red and white dive flag on a short mast. No water drawn, only the boat. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, pure side view, facing right, underwater creature. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

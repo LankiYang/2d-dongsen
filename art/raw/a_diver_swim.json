@@ -1,0 +1,9 @@
+{
+  "name": "a_diver_swim",
+  "style": "SEA",
+  "refs": [
+    "art/raw/t_diver_side.png"
+  ],
+  "prompt": "LOW RESOLUTION pixel art sprite sheet of the EXACT same scuba diver as the reference (same black wetsuit, yellow tank, orange fins, same pixel size), swimming horizontally facing right. One single row of 4 frames forming a smooth flutter-kick swim cycle: legs kicking up and down alternately, fins flexing, arms stretched forward. All frames the same size, evenly spaced with generous white gaps, no labels, no grid lines",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). LOW RESOLUTION pixel art sprite sheet of the EXACT same scuba diver as the reference (same black wetsuit, yellow tank, orange fins, same pixel size), swimming horizontally facing right. One single row of 4 frames forming a smooth flutter-kick swim cycle: legs kicking up and down alternately, fins flexing, arms stretched forward. All frames the same size, evenly spaced with generous white gaps, no labels, no grid lines. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, pure side view, facing right, underwater creature. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

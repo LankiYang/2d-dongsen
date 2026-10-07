@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#04070d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="2D动森" />
+  <title>2D动森</title>
+  <link rel="stylesheet" href="/src/ui/style.css" />
+</head>
+<body>
+  <div id="game"></div>
+  <!-- 手机竖着拿的时候提示横过来（只在触屏设备上显示） -->
+  <div id="rotate"><div class="rot-phone"></div><div>把手机横过来玩</div></div>
+  <div id="ui">
+    <div id="loading" class="screen">
+      <div class="logo">2D动森</div>
+      <div class="sub">ISLAND LIFE</div>
+      <div class="bar"><i></i></div>
+      <div class="tip">正在把海风装进小岛里……</div>
+    </div>
+
+    <!-- 标题画面：背景是画布里正在巡游的岛屿（TitleScene），这里只有遮罩、字幕、标题和登岛卡片 -->
+    <div id="login" class="hidden">
+      <div class="tl-shade"></div>
+      <div class="tl-bar top"></div>
+      <div class="tl-bar bottom">
+        <div id="title-cap"><span id="cap-no"></span><span id="cap-title"></span><span id="cap-text"></span></div>
+        <div id="title-dots"></div>
+      </div>
+      <div class="tl-logo">
+        <div class="tl-name">2D动森</div>
+        <div class="tl-en">ISLAND LIFE</div>
+        <p class="tl-lead">潮汐港的大家，加上一座你自己的小岛，<br>跟着现实的时间慢慢过日子。</p>
+      </div>
+      <div class="panel login-panel">
+        <canvas id="login-preview" width="144" height="160"></canvas>
+        <div class="lp-form">
+          <label>你的名字<input id="login-name" maxlength="12" placeholder="例如：阿潮" /></label>
+          <div class="label">衬衫颜色</div>
+          <div id="login-hues" class="hues"></div>
+          <button id="login-go" class="btn big">出海！</button>
+        </div>
+        <div class="lp-tip">按 Enter 出海 · 这台电脑会记住你的存档</div>
+      </div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div id="clock" class="panel small-panel">
+        <div class="row"><span id="clock-day">第 1 天</span><span id="clock-weather">☀</span></div>
+        <div id="clock-time">06:00</div>
+        <div class="row coins"><i class="coin"></i><span id="coins">0</span></div>
+        <div class="row energy" title="体力：出海一次 40，每天早上 6 点回满，吃作物能回"><span class="en-label">体力</span><span class="en-bar"><i id="energy-fill"></i></span><span id="energy">100</span></div>
+      </div>
+      <div id="tracker" class="hidden"></div>
+      <div id="sea-hud" class="hidden">
+        <div class="gauge"><div class="gauge-fill" id="o2-fill"></div><div class="gauge-label">O₂</div></div>
+        <div id="depth" class="panel small-panel">0 m</div>
+        <div id="basket" class="panel small-panel">鱼篓 0/8</div>
+        <div id="zone" class="zone-name"></div>
+      </div>
+      <div id="hint" class="hidden"></div>
+      <div id="hotbar"></div>
+      <div id="toasts"></div>
+      <div id="chat">
+        <div id="chat-log"></div>
+        <input id="chat-input" maxlength="80" placeholder="按 Enter 聊天" />
+      </div>
+      <div id="help" class="panel small-panel">
+        <b>WASD</b> 移动 · <b>鼠标左键</b> 使用 · <b>1-8</b> 切换 · <b>滚轮/+-</b> 缩放 · <b>E</b> 互动 · <b>I</b> 背包 · <b>J</b> 任务 · <b>Enter</b> 聊天
+      </div>
+    </div>
+
+    <div id="shop" class="modal hidden">
+      <div class="panel shop-panel">
+        <div class="title"><span id="shop-title">鱼摊</span><button class="x" data-close>×</button></div>
+        <div class="shop-cols">
+          <div class="col" id="shop-buy-col">
+            <div class="col-title">买种子</div>
+            <div id="shop-buy"></div>
+          </div>
+          <div class="col">
+            <div class="col-title" id="shop-sell-tip">卖出（点击卖 1 个，Shift+点击 全部卖出）</div>
+            <div id="shop-sell" class="grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="upgrade" class="modal hidden">
+      <div class="panel upgrade-panel">
+        <div class="title">潜水店 · 小珊<button class="x" data-close>×</button></div>
+        <div id="upgrade-cards" class="gear-cards"></div>
+        <div class="inv-tip">装备不占背包格子，升级后下次下潜生效</div>
+      </div>
+    </div>
+
+    <div id="inventory" class="modal hidden">
+      <div class="panel inv-panel">
+        <div class="title">背包<button class="x" data-close>×</button></div>
+        <div id="inv-grid" class="grid"></div>
+        <div class="inv-tip">拖动物品换位置；前 8 格是快捷栏</div>
+      </div>
+    </div>
+
+    <div id="cook" class="modal hidden">
+      <div class="panel cook-panel">
+        <div class="title"><span id="cook-title">砧板</span><button class="x" data-close>×</button></div>
+        <div id="cook-list"></div>
+        <div id="cook-game" class="hidden">
+          <div id="cook-dish" class="cook-dish"></div>
+          <div class="cook-bar"><div id="cook-zone" class="cook-zone"></div><div id="cook-cuts"></div><div id="cook-knife" class="cook-knife"></div></div>
+          <div id="cook-hint" class="cook-hint"></div>
+        </div>
+      </div>
+    </div>
+    <div id="holding" class="hidden"></div>
+
+    <div id="journal" class="modal hidden">
+      <div class="panel journal-panel">
+        <div class="title"><span class="tabs"><button class="tab on" data-tab="quests">任务</button><button class="tab" data-tab="social">关系</button></span><button class="x" data-close>×</button></div>
+        <div id="journal-quests" class="journal-body"></div>
+        <div id="journal-social" class="journal-body hidden"></div>
+      </div>
+    </div>
+
+    <div id="board" class="modal hidden">
+      <div class="panel board-panel">
+        <div class="title">告示板<button class="x" data-close>×</button></div>
+        <div id="board-body"></div>
+      </div>
+    </div>
+
+    <div id="restore" class="modal hidden">
+      <div class="panel restore-panel">
+        <div class="title">潮汐港复兴计划<button class="x" data-close>×</button></div>
+        <div id="restore-stages" class="rs-steps"></div>
+        <div class="rs-cols"><div id="restore-body"></div><div id="restore-side"></div></div>
+      </div>
+    </div>
+
+    <div id="mail" class="modal hidden">
+      <div class="panel mail-panel">
+        <div class="title">信箱<button class="x" data-close>×</button></div>
+        <div class="mail-cols"><div id="mail-list"></div><div id="mail-letter"></div></div>
+      </div>
+    </div>
+
+    <div id="catalog" class="modal hidden">
+      <div class="panel catalog-panel">
+        <div class="title">家具目录<span class="catalog-coins"><i class="coin"></i><span id="catalog-coins">0</span></span><button class="x" data-close>×</button></div>
+        <div class="catalog-tip">买下的家具放进背包；在自己家里拿在手上，点一下就摆出来</div>
+        <div class="catalog-cols" id="catalog-cols"></div>
+      </div>
+    </div>
+
+    <div id="chest" class="modal hidden">
+      <div class="panel chest-panel">
+        <div class="title">储物箱<button class="x" data-close>×</button></div>
+        <div class="chest-cols">
+          <div><div class="col-title">箱子（点一下取回背包）</div><div id="chest-box" class="grid"></div></div>
+          <div><div class="col-title">背包（点一下放进箱子）</div><div id="chest-inv" class="grid"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialog" class="modal dialog-modal hidden">
+      <div class="dlg-wrap">
+        <div id="dlg-face" class="dlg-face"></div>
+        <div class="dlg-box panel">
+          <div class="dlg-name"><span id="dlg-name"></span><span id="dlg-title" class="dlg-title"></span></div>
+          <div id="dlg-text" class="dlg-text"></div>
+          <div id="dlg-options" class="dlg-options"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hurt"></div>
+    <div id="fade"></div>
+    <div id="offline" class="hidden">与服务器断开，正在重连……</div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

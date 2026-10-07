@@ -1,0 +1,9 @@
+{
+  "name": "s_trees",
+  "style": "LAND",
+  "refs": [
+    "art/raw/key_island_a.png"
+  ],
+  "prompt": "A sprite sheet of vegetation for a tropical island farming game, all drawn at the SAME pixel scale. One row of 4 large trees: a tall curved coconut palm, a second palm leaning the other way, a big round broadleaf tropical tree, a mango tree with orange fruit. Below it one row of 6 smaller plants: a red hibiscus bush, a pink bougainvillea bush, a round green shrub, a large fern, a banana plant, a clump of tall grass. Every item stands on its own with generous empty white space around it, nothing overlapping, no ground under them, no labels",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A sprite sheet of vegetation for a tropical island farming game, all drawn at the SAME pixel scale. One row of 4 large trees: a tall curved coconut palm, a second palm leaning the other way, a big round broadleaf tropical tree, a mango tree with orange fruit. Below it one row of 6 smaller plants: a red hibiscus bush, a pink bougainvillea bush, a round green shrub, a large fern, a banana plant, a clump of tall grass. Every item stands on its own with generous empty white space around it, nothing overlapping, no ground under them, no labels. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, three-quarter top-down view like a farming game, grounded object. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

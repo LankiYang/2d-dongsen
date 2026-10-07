@@ -1,0 +1,23 @@
+# 依赖与构建产物
+node_modules/
+dist/
+
+# 密钥：只提交 .env.example
+.env
+
+# 世界存档（运行时数据）
+server/data/
+
+# 改动前的手工备份（按全局规则保留在本地）
+*.bak
+
+# 可再生成的调试输出
+art/preview/
+# 下载的第三方原始压缩包；用到的文件已拷进 public/，出处见 README
+art/vendor/
+
+# 工具临时文件
+tools/_*
+tools/.bot-tokens.json
+# 早期测试时 pixelize 输出的中间文件，构建不使用
+art/sprites/

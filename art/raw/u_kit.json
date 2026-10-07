@@ -1,0 +1,9 @@
+{
+  "name": "u_kit",
+  "style": "CORE",
+  "refs": [
+    "art/raw/key_island_b.png"
+  ],
+  "prompt": "A pixel art game UI kit sprite sheet for a cozy tropical farming and diving game, all at the same pixel scale, generous empty white space between every element: a large empty wooden dialog panel with a thick carved wood frame and warm parchment interior, a square inventory slot (dark wood inset), a highlighted inventory slot with a golden border, a long horizontal wooden bar frame, a round wooden button, a small rectangular wooden button, a vertical empty oxygen gauge frame, a little heart, a little coin. No text anywhere, no labels",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A pixel art game UI kit sprite sheet for a cozy tropical farming and diving game, all at the same pixel scale, generous empty white space between every element: a large empty wooden dialog panel with a thick carved wood frame and warm parchment interior, a square inventory slot (dark wood inset), a highlighted inventory slot with a golden border, a long horizontal wooden bar frame, a round wooden button, a small rectangular wooden button, a vertical empty oxygen gauge frame, a little heart, a little coin. No text anywhere, no labels. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

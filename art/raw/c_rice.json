@@ -1,0 +1,9 @@
+{
+  "name": "c_rice",
+  "style": "LAND",
+  "refs": [
+    "art/raw/t_tomato_stages.png"
+  ],
+  "prompt": "A horizontal sprite strip of 5 growth stages of a rice plant for a farming game, left to right: seed mound in soil, tiny green sprout, young grassy clump, tall green stalks, mature golden stalks with drooping rice grain heads. Evenly spaced in one row on the same baseline, generous white space between stages, no labels",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A horizontal sprite strip of 5 growth stages of a rice plant for a farming game, left to right: seed mound in soil, tiny green sprout, young grassy clump, tall green stalks, mature golden stalks with drooping rice grain heads. Evenly spaced in one row on the same baseline, generous white space between stages, no labels. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette, three-quarter top-down view like a farming game, grounded object. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}

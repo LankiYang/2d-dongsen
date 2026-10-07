@@ -1,0 +1,5 @@
+All tracks CC0 (public domain), from OpenGameArt.org:
+- music_good_morning.ogg  "Good Morning" by Cakeflaps / You're Perfect Studio  https://opengameart.org/content/good-morning
+- music_gone_fishin.mp3   "Gone Fishin'" by Memoraphile / You're Perfect Studio  https://opengameart.org/content/gone-fishin
+- music_aquaria.ogg       "Aquaria" by cynicmusic  https://opengameart.org/content/aquaria  (converted from WAV)
+- music_bossa.mp3         "Bossa Shop Theme" by SpringySpringo  https://opengameart.org/content/bossa-shop-theme-in-low-fi-and-hd

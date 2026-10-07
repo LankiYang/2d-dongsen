@@ -1,0 +1,10 @@
+{
+  "name": "bg_reef",
+  "style": "SCENE",
+  "bg": "scene",
+  "refs": [
+    "art/raw/key_sea_a.png"
+  ],
+  "prompt": "A wide empty underwater background plate for a side-scrolling diving game, to be used as a distant parallax layer: soft blue water haze, distant silhouettes of reef rock formations and coral mounds in muted blue tones along the bottom third, faint sun rays from the top. Absolutely no fish, no creatures, no diver, no bubbles in the foreground, low contrast so gameplay sprites stand out",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). A wide empty underwater background plate for a side-scrolling diving game, to be used as a distant parallax layer: soft blue water haze, distant silhouettes of reef rock formations and coral mounds in muted blue tones along the bottom third, faint sun rays from the top. Absolutely no fish, no creatures, no diver, no bubbles in the foreground, low contrast so gameplay sprites stand out. beautiful detailed pixel art game background, modern indie game quality, rich atmospheric lighting, crisp pixels, no text, no UI, no characters."
+}

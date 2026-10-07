@@ -1,0 +1,9 @@
+{
+  "name": "p_ahai",
+  "style": "CORE",
+  "refs": [
+    "art/raw/n_sheet.png"
+  ],
+  "prompt": "Two dialogue portraits side by side of the SAME character, the old fisherman from the reference (1st villager: white beard, weathered tan skin, blue bandana, blue and white striped shirt with rolled-up sleeves, rubber apron). Bust shot from the chest up, body turned slightly to the right, detailed high quality pixel art portrait like a modern indie RPG dialogue box, warm rim light. Left portrait: calm, gruff but kind expression. Right portrait: laughing heartily with eyes squinted. Same size, same framing, generous white space between them, no frame, no text",
+  "sentPrompt": "Match the exact art style, palette, outline treatment and pixel size of the reference image(s). Two dialogue portraits side by side of the SAME character, the old fisherman from the reference (1st villager: white beard, weathered tan skin, blue bandana, blue and white striped shirt with rolled-up sleeves, rubber apron). Bust shot from the chest up, body turned slightly to the right, detailed high quality pixel art portrait like a modern indie RPG dialogue box, warm rim light. Left portrait: calm, gruff but kind expression. Right portrait: laughing heartily with eyes squinted. Same size, same framing, generous white space between them, no frame, no text. high quality hand-crafted pixel art in the style of a modern cozy indie game, crisp hard-edged square pixels on a strict grid, absolutely no anti-aliasing, no blur, no gradients inside pixels, limited harmonious palette, warm saturated colors, clean 1-pixel dark outline tinted with the local color (never pure black), soft light coming from the top-left, readable silhouette. THE BACKGROUND MUST BE PURE FLAT SOLID WHITE (#FFFFFF), identical in every corner and along every edge. No vignette, no gradient, no floor, no cast shadow on the background, no text, no border, no frame."
+}
