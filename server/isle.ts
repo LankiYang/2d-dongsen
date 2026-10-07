@@ -4,7 +4,7 @@
 // 序章第 0 天的每一步都由服务端校验（够不够近、东西够不够、是不是这一步）。
 import type { DatabaseSync } from 'node:sqlite'
 import { makeIsle, ISLE_W, ISLE_H } from '../shared/isle/gen.ts'
-import { canPlaceTent, tentTiles } from '../shared/isle/rules.ts'
+import { canPlaceTent, canPlaceFoot, tentTiles, museumTiles, MUSEUM_W, MUSEUM_H, MUSEUM_ROOM } from '../shared/isle/rules.ts'
 import type { Isle } from '../shared/isle/gen.ts'
 import { starters, VILLAGERS } from '../shared/villagers.ts'
 import { TILE } from '../shared/data.ts'
@@ -63,6 +63,12 @@ interface IsleState {
   chops?: Record<number, [number, number]>     // 树 id → [哪天, 砍出几块木材]
   rockHits?: Record<number, [number, number]>  // 石头 id → [哪天, 敲了几下]
   goldDay?: number                   // 哪天出过金矿石（一天最多一块）
+  curatorTent?: TentSpot | null      // 馆长的帐篷（之后原地盖博物馆）
+  curatorDay?: number                // 哪天放下的（第二天馆长到）
+  museum?: { donated: string[], base: number }   // 博物馆收的东西；base = 馆长来时已有几件
+  museumDay?: number                 // 哪天捐满（第二天开馆）
+  digs?: { id: number, tx: number, ty: number }[]   // 化石点
+  digSeq?: number
 }
 export interface IsleRec { id: number, owner: number, ownerName: string, seed: number, name: string, hemi: 'N' | 'S', st: IsleState, fresh?: boolean }   // fresh：每日刷新改过、还没推给客户端
 
@@ -75,7 +81,7 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
   if (!cols.includes('birthday')) db.exec('ALTER TABLE players ADD COLUMN birthday TEXT')
   if (!cols.includes('prog')) db.exec('ALTER TABLE players ADD COLUMN prog TEXT')
 
-  const hooks: { onLoad?: (r: IsleRec) => void, onPickup?: (s: S, item: string) => void, onPhone?: (s: S) => void } = {}
+  const hooks: { onLoad?: (r: IsleRec) => void, onPickup?: (s: S, item: string) => void, onPhone?: (s: S) => void, onCurator?: (s: S, r: IsleRec) => void } = {}
   const geos = new Map<number, Isle>()
   const geo = (seed: number) => { let g = geos.get(seed); if (!g) { g = makeIsle(seed); geos.set(seed, g) } return g }
   const recs = new Map<number, IsleRec>()
@@ -95,12 +101,13 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
     id: r.id, owner: r.owner, ownerName: r.ownerName, seed: r.seed, name: r.name, stage: r.st.stage, tent: r.st.tent,
     villagers: r.st.villagers, removed: r.st.removed, fruitTaken: r.st.fruitTaken, drops: r.st.drops, hemi: r.hemi,
     moneyRock: r.st.moneyRock ?? -1,
+    curatorTent: r.st.curatorTent ?? null, museum: r.st.museum ?? { donated: [], base: 0 }, digs: r.st.digs ?? [],
   })
   const sceneOf = (r: IsleRec): SceneId => `isle:${r.id}`
   function push(r: IsleRec) {
     save(r)
     const m: ServerMsg = { t: 'isle', isle: pub(r) }
-    for (const s of ctx.sessions) if (s.scene === sceneOf(r) || s.scene === `tent:${r.owner}`) ctx.send(s, m)
+    for (const s of ctx.sessions) if (s.scene === sceneOf(r) || s.scene === `tent:${r.owner}` || s.scene === `museum:${r.id}`) ctx.send(s, m)
   }
 
   // 新岛：开局的两位村民按种子挑（运动 + 大姐姐）
@@ -119,17 +126,20 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
   const toast = (s: S, text: string) => ctx.send(s, { t: 'toast', text })
 
   // ── 帐篷能不能放（规则在 shared/isle/rules.ts，客户端预览也用它）──
-  const canPlace = (r: IsleRec, spot: TentSpot) => canPlaceTent(geo(r.seed), r.st, spot)
-  function place(r: IsleRec, spot: TentSpot) {
+  const canPlace = (r: IsleRec, spot: TentSpot, museum = false) => museum ? canPlaceFoot(geo(r.seed), r.st, spot, MUSEUM_W, MUSEUM_H) : canPlaceTent(geo(r.seed), r.st, spot)
+  function place(r: IsleRec, spot: TentSpot, museum = false) {
     const g = geo(r.seed)
-    const tiles = new Set(tentTiles(spot).map(([x, y]) => `${x},${y}`))
+    const tiles = new Set((museum ? museumTiles(spot) : tentTiles(spot)).map(([x, y]) => `${x},${y}`))
     // 压到的树、花、草、树枝清掉（石头前面已经挡了）
     for (const o of g.objects) {
       if (r.st.removed.includes(o.id)) continue
       if (tiles.has(`${Math.floor(o.x / TILE)},${Math.floor((o.y - 2) / TILE)}`)) r.st.removed.push(o.id)
     }
     r.st.drops = r.st.drops.filter(d => !tiles.has(`${Math.floor(d.x / TILE)},${Math.floor(d.y / TILE)}`))
+    if (r.st.digs) r.st.digs = r.st.digs.filter(d => !tiles.has(`${d.tx},${d.ty}`))
   }
+  // 馆长站在帐篷 / 博物馆门口右手边
+  const curatorAt = (r: IsleRec) => { const t = r.st.curatorTent; return t ? { x: (t.tx + 0.5) * TILE + 34, y: (t.ty + 1.5) * TILE } : null }
 
   // 地上掉东西：围着 (x, y) 撒开
   function drop(r: IsleRec, item: string, x: number, y: number) {
@@ -137,7 +147,7 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
   }
 
   return {
-    geo, load, pub, create, sceneOf, push, save, hooks, isleOfScene, nearPx, toast, drop,
+    geo, load, pub, create, sceneOf, push, save, hooks, isleOfScene, nearPx, toast, drop, curatorAt,
 
     // 登录：自己的岛（没有的返回 null，要先去机场办手续）
     welcomeIsle(s: S): IslePublic | null {
@@ -150,6 +160,7 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
     clamp(s: S) {
       if (s.scene.startsWith('isle:')) { s.x = Math.max(0, Math.min(ISLE_W * TILE, s.x)); s.y = Math.max(0, Math.min(ISLE_H * TILE, s.y)); return true }
       if (s.scene.startsWith('tent:')) { s.x = Math.max(0, Math.min(6 * TILE, s.x)); s.y = Math.max(0, Math.min(6 * TILE, s.y)); return true }
+      if (s.scene.startsWith('museum:')) { s.x = Math.max(0, Math.min(MUSEUM_ROOM.w * TILE, s.x)); s.y = Math.max(0, Math.min(MUSEUM_ROOM.h * TILE, s.y)); return true }
       return false
     },
 
@@ -164,6 +175,22 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
         const doorX = (r.st.tent.tx + 0.5) * TILE, doorY = (r.st.tent.ty + 1) * TILE
         if (!nearPx(s, doorX, doorY, 3)) return back()
         s.scene = to; s.x = 3 * TILE; s.y = 5 * TILE - 6; s.dirty = true
+        return true
+      }
+      // 进博物馆：开馆以后，站在门口
+      if (to.startsWith('museum:')) {
+        const r = isleOfScene(s.scene)
+        const back = () => { ctx.send(s, { t: 'goto', scene: s.scene, x: s.x, y: s.y }); return true }
+        if (!r || `museum:${r.id}` !== to || r.st.stage !== 'museumOpen' || !r.st.curatorTent) return back()
+        const t = r.st.curatorTent
+        if (!nearPx(s, (t.tx + 0.5) * TILE, (t.ty + 1) * TILE, 2.5)) return back()
+        s.scene = to; s.x = MUSEUM_ROOM.w * TILE / 2; s.y = MUSEUM_ROOM.h * TILE - 20; s.dirty = true
+        return true
+      }
+      if (to.startsWith('isle:') && s.scene.startsWith('museum:')) {
+        const r = load(Number(to.slice(5)))
+        if (!r || `museum:${r.id}` !== s.scene || !r.st.curatorTent) return true
+        s.scene = to; s.x = (r.st.curatorTent.tx + 0.5) * TILE; s.y = (r.st.curatorTent.ty + 1.7) * TILE; s.dirty = true
         return true
       }
       if (to.startsWith('isle:') && s.scene.startsWith('tent:')) {
@@ -223,7 +250,7 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
       if (!it) return
       const spot = { tx: Math.round(m.tx), ty: Math.round(m.ty) }
       if (!nearPx(s, (spot.tx + 0.5) * TILE, (spot.ty + 0.5) * TILE, 4)) return
-      const why = canPlace(r, spot)
+      const why = canPlace(r, spot, it.id === 'kit_curator')
       if (why) { toast(s, why); return }
       if (it.id === 'kit_tent' && r.st.stage === 'tent' && !r.st.tent) {
         ctx.takeItem(s, 'kit_tent'); place(r, spot); r.st.tent = spot
@@ -233,6 +260,10 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
         if (!v || v.tent) return
         ctx.takeItem(s, it.id); place(r, spot); v.tent = spot
         if (r.st.villagers.every(x => x.tent)) r.st.stage = 'branches'
+      } else if (it.id === 'kit_curator' && r.st.stage === 'curator' && !r.st.curatorTent) {
+        // 馆长的帐篷：按博物馆的大小预留，第二天馆长到
+        ctx.takeItem(s, 'kit_curator'); place(r, spot, true); r.st.curatorTent = spot; r.st.curatorDay = ctx.today()
+        r.st.stage = 'curatorWait'
       } else return
       ctx.sendInv(s)
       push(r)
@@ -269,6 +300,16 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
         if (!nearPx(s, plazaC.x, plazaC.y, 12)) return
         hooks.onPhone?.(s)
         st.stage = 'diy'
+      } else if (m.step === 'curatorKit' && st.stage === 'curator') {
+        // 馆长的帐篷包（交满 5 只时口袋满了没拿到，再找周叔要）
+        if (st.curatorTent || s.inv.some(x => x?.id === 'kit_curator') || !nearPx(s, plazaC.x, plazaC.y, 12)) return
+        if (!ctx.addItem(s, 'kit_curator')) { toast(s, '口袋满了'); return }
+      } else if (m.step === 'curatorHello' && st.stage === 'curatorHere') {
+        // 第一次见馆长：给铲子和撑竿的配方，周叔那 5 只算捐过的，再捐 15 件就盖博物馆
+        const c = curatorAt(r)
+        if (!c || !nearPx(s, c.x, c.y, 4)) return
+        hooks.onCurator?.(s, r)
+        st.stage = 'museum15'
       } else if (m.step === 'sleep' && st.stage === 'sleep') {
         if (s.scene !== `tent:${r.owner}`) return
         ctx.takeItem(s, 'cot')

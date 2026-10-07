@@ -14,6 +14,7 @@ export const RECIPES: Record<string, Recipe> = {
   flimsy_axe: { id: 'flimsy_axe', name: '简易斧头', makes: 'flimsy_axe', mats: [['branch', 5], ['stone', 1]] },
   flimsy_can: { id: 'flimsy_can', name: '简易洒水壶', makes: 'flimsy_can', mats: [['softwood', 5]] },
   flimsy_shovel: { id: 'flimsy_shovel', name: '简易铲子', makes: 'flimsy_shovel', mats: [['hardwood', 5]] },
+  vaulting_pole: { id: 'vaulting_pole', name: '撑竿', makes: 'vaulting_pole', mats: [['softwood', 5]] },
 }
 
 // ── 里程：成就（第一次做到某件事，之后按档位）──
@@ -42,3 +43,5 @@ export const TENT_SHOP: [ItemId, number][] = [['flimsy_rod', 400], ['flimsy_net'
 // 周叔要研究岛上的生物：交满几只给什么（原作 2 只简易斧头配方、4 只简易洒水壶配方、5 只馆长要来）
 export const CRITTER_REWARDS: [number, string][] = [[2, 'flimsy_axe'], [4, 'flimsy_can']]
 export const CRITTERS_FOR_CURATOR = 5
+// 馆长来了以后再捐多少件不同的东西（鱼、虫、鉴定过的化石）就盖博物馆（原作 15）
+export const MUSEUM_GOAL = 15

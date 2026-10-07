@@ -112,3 +112,49 @@ export async function playDay0(c, seed, { verbose = false } = {}) {
   ok('进帐篷睡觉 → 第 1 天', c.isle?.stage === 'day1')
   return { g, plaza }
 }
+
+// ── 第 1 天的捷径（给后面几天的测试用）──
+// 能走到的海边
+export function findShore(g) {
+  for (let y = 0; y < g.types.length / ISLE_W; y++) for (let x = 0; x < ISLE_W; x++) {
+    const i = y * ISLE_W + x
+    if (g.types[i] !== IT.SAND || !g.start[i]) continue
+    if ([[0, 2], [0, 3], [2, 0], [-2, 0]].some(([dx, dy]) => g.types[(y + dy) * ISLE_W + x + dx] === IT.SHALLOW)) return { x: (x + 0.5) * TILE, y: (y + 0.5) * TILE }
+  }
+  return null
+}
+// 凑树枝：地上的、掉落的，不够就摇树
+export async function getBranches(c, g, plaza, n) {
+  for (const b of g.objects.filter(o => o.kind === 'branch' && !c.isle.removed.includes(o.id))) {
+    if (c.count('branch') >= n) return
+    await c.walk(b.x, b.y + 6); c.send({ t: 'pickup', obj: b.id }); await wait(80)
+  }
+  for (const d of c.isle.drops.filter(d => d.item === 'branch')) {
+    if (c.count('branch') >= n) return
+    await c.walk(d.x, d.y + 4); c.send({ t: 'pickup', drop: d.id }); await wait(80)
+  }
+  const trees = g.objects.filter(o => o.kind === 'tree' && !c.isle.removed.includes(o.id) && g.start[Math.floor((o.y + 14) / TILE) * ISLE_W + Math.floor(o.x / TILE)])
+    .sort((a, b) => Math.hypot(a.x - plaza.x, a.y - plaza.y) - Math.hypot(b.x - plaza.x, b.y - plaza.y))
+  for (const t of trees.slice(0, 80)) {
+    if (c.count('branch') >= n) return
+    await c.walk(t.x, t.y + 14); c.send({ t: 'shake', obj: t.id }); await wait(120)
+    for (const d of c.isle.drops.filter(d => d.item === 'branch')) { await c.walk(d.x, d.y + 4); c.send({ t: 'pickup', drop: d.id }); await wait(80) }
+  }
+}
+// 在海边钓 list 里的鱼（每条间隔 1.1 秒，服务端限速 1 秒）
+export async function catchFish(c, shore, list) {
+  await c.walk(shore.x, shore.y)
+  for (const f of list) { c.send({ t: 'catch', kind: 'fish', id: f.id, slot: c.slotOf('flimsy_rod') }); await wait(1100) }
+}
+// 第 1 天：拿手机 → 做钓竿 → 钓 5 种海鱼交给周叔 → 拿到馆长的帐篷包
+export async function playDay1(c, g, plaza, seaFish) {
+  c.send({ t: 'scene', to: `isle:${c.isle.id}` }); await wait(300)
+  await c.walk(plaza.x, plaza.y)
+  c.send({ t: 'prologue', step: 'phone' }); await wait(300)
+  await getBranches(c, g, plaza, 5)
+  await c.walk(plaza.x, plaza.y)
+  c.send({ t: 'craft', recipe: 'flimsy_rod' }); await wait(300)
+  await catchFish(c, findShore(g), seaFish.slice(0, 5))
+  await c.walk(plaza.x, plaza.y)
+  for (const f of seaFish.slice(0, 5)) { c.send({ t: 'give', slot: c.slotOf(`fsh_${f.id}`) }); await wait(200) }
+}

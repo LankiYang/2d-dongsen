@@ -1,9 +1,11 @@
-// 岛上的日常（2D动森，第 1 天起）：每天早上的刷新、砍树敲石头、DIY、钓鱼抓虫、交给周叔研究、帐篷小店、移居费、里程成就。
+// 岛上的日常（2D动森，第 1 天起）：每天早上的刷新、砍树敲石头、DIY、钓鱼抓虫、交给周叔研究、帐篷小摊、移居费、里程成就；
+// 第 2 天起：馆长（龟教授）、化石点和铲子、鉴定、捐博物馆。
 // 数值照原作（docs/acnh-research.md）。规则全在服务端，客户端只负责演和发请求。
 import { TILE, ITEMS, calendarOf, dayOf, hourOf } from '../shared/data.ts'
 import { ISLE_W, IT, isWaterT, FRUITS } from '../shared/isle/gen.ts'
-import { objTile } from '../shared/isle/rules.ts'
-import { RECIPES, ACHIEVEMENTS, TOOL_USES, TENT_SHOP, CRITTER_REWARDS, CRITTERS_FOR_CURATOR, MOVE_BILL } from '../shared/diy.ts'
+import { objTile, MUSEUM_DESK } from '../shared/isle/rules.ts'
+import { RECIPES, ACHIEVEMENTS, TOOL_USES, TENT_SHOP, CRITTER_REWARDS, CRITTERS_FOR_CURATOR, MOVE_BILL, MUSEUM_GOAL } from '../shared/diy.ts'
+import { FOSSILS, DIGS_PER_DAY, DIGS_MAX } from '../shared/fossils.ts'
 import type { Stat } from '../shared/diy.ts'
 import { FISH_BY, BUG_BY, fishAvailable, bugAvailable } from '../shared/critters.ts'
 import { hash2 } from '../shared/noise.ts'
@@ -12,7 +14,16 @@ import type { IsleCtx, IsleSession, IsleRec, Prog, initIsles } from './isle.ts'
 import { loadProg } from './isle.ts'
 
 export function initLife<S extends IsleSession>(ctx: IsleCtx<S> & { clock(): number }, isles: ReturnType<typeof initIsles<S>>) {
-  const { geo, push, isleOfScene, nearPx, toast, drop } = isles
+  const { geo, push, isleOfScene, nearPx, toast, drop, curatorAt, load } = isles
+  const CURATOR_STAGES = ['curatorHere', 'museum15', 'museumBuild', 'museumOpen']
+  // 人在哪座岛上（岛上或者博物馆里）
+  const isleHere = (s: S) => isleOfScene(s.scene) ?? (s.scene.startsWith('museum:') ? load(Number(s.scene.slice(7))) : null)
+  // 够得着馆长：开馆前在他帐篷门口，开馆后在馆里的前台
+  const byCurator = (r: IsleRec, s: S) => {
+    if (s.scene === `museum:${r.id}`) return r.st.stage === 'museumOpen' && nearPx(s, MUSEUM_DESK.x, MUSEUM_DESK.y + 30, 3)
+    const c = curatorAt(r)
+    return !!c && r.st.stage !== 'museumOpen' && nearPx(s, c.x, c.y, 4)
+  }
 
   const prog = (s: S): Prog => (s.prog ??= loadProg(null))
   const progPub = (p: Prog): ProgPublic => ({ miles: p.miles, phone: p.phone, recipes: p.recipes, pedia: p.pedia, stats: p.stats, achieved: p.achieved, bill: p.bill, given: p.given })
@@ -78,7 +89,21 @@ export function initLife<S extends IsleSession>(ctx: IsleCtx<S> & { clock(): num
     for (const o of g.objects) if (!st.removed.includes(o.id)) { const [x, y] = objTile(o); busy.add(y * W + x) }
     const tileFree = (x: number, y: number) => !busy.has(y * W + x) && !st.drops.some(d => Math.floor(d.x / TILE) === x && Math.floor(d.y / TILE) === y) && !g.blocked[y * W + x]
     const rand = (n: number) => Math.floor(Math.random() * n)
+    // 馆长第二天到；捐满后第二天博物馆开馆
+    if (st.stage === 'curatorWait' && (st.curatorDay ?? today) < today) st.stage = 'curatorHere'
+    if (st.stage === 'museumBuild' && (st.museumDay ?? today) < today) st.stage = 'museumOpen'
     for (let k = 0; k < days; k++) {
+      // 化石点：馆长来了以后才有；每天最多新出 4 个，全岛最多 6 个，在平地的草上
+      if (CURATOR_STAGES.includes(st.stage)) {
+        st.digs ??= []; st.digSeq ??= 1
+        const want = Math.min(DIGS_PER_DAY, DIGS_MAX - st.digs.length)
+        for (let i = 0, tries = 0; i < want && tries < 400; tries++) {
+          const x = rand(W), y = rand(g.types.length / W)
+          if (g.types[y * W + x] !== IT.GRASS || g.level[y * W + x] || !tileFree(x, y) || st.digs.some(d => Math.abs(d.tx - x) + Math.abs(d.ty - y) < 3)) continue
+          if (st.curatorTent && Math.abs(x - st.curatorTent.tx) <= 4 && y >= st.curatorTent.ty - 4 && y <= st.curatorTent.ty + 2) continue
+          st.digs.push({ id: st.digSeq++, tx: x, ty: y }); i++
+        }
+      }
       // 树枝：地上最多 15 根，阔叶树底下冒出来
       const trees = g.objects.filter(o => o.kind === 'tree' && !st.removed.includes(o.id))
       const nb = st.drops.filter(d => d.item === 'branch').length + g.objects.filter(o => o.kind === 'branch' && !st.removed.includes(o.id)).length
@@ -123,7 +148,7 @@ export function initLife<S extends IsleSession>(ctx: IsleCtx<S> & { clock(): num
   // 每 5 秒检查一次：有人在的岛换日了就刷新、推给客户端（读档时刷新过的也在这里推）
   const tick = () => {
     for (const s of ctx.sessions) {
-      const r = isleOfScene(s.scene) ?? (s.scene.startsWith('tent:') && s.isle ? isles.load(s.isle) : null)
+      const r = isleHere(s) ?? (s.scene.startsWith('tent:') && s.isle ? isles.load(s.isle) : null)
       if (r?.fresh) { r.fresh = false; push(r) }
     }
   }
@@ -132,6 +157,13 @@ export function initLife<S extends IsleSession>(ctx: IsleCtx<S> & { clock(): num
     if (item === 'weeds') stat(s, 'weeds')
     else if (item.startsWith('shell_')) stat(s, 'shells')
     else if ((FRUITS as readonly string[]).includes(item)) stat(s, 'fruit')
+  }
+  // 第一次见馆长：铲子、撑竿的配方；周叔那 5 只算捐过的
+  isles.hooks.onCurator = (s: S, r: IsleRec) => {
+    learn(s, 'flimsy_shovel'); learn(s, 'vaulting_pole')
+    const given = prog(s).given
+    r.st.museum = { donated: [...given], base: given.length }
+    sendProg(s)
   }
   // 第 1 天早上：手机、移居成就、钓竿配方（DIY 教室）
   isles.hooks.onPhone = (s: S) => {
@@ -269,9 +301,60 @@ export function initLife<S extends IsleSession>(ctx: IsleCtx<S> & { clock(): num
       ctx.takeItem(s, it.id)
       p.given.push(it.id)
       for (const [n, recipe] of CRITTER_REWARDS) if (p.given.length === n) { learn(s, recipe); ctx.send(s, { t: 'toast', text: `学会了「${RECIPES[recipe].name}」的做法！` }) }
-      if (p.given.length >= CRITTERS_FOR_CURATOR) { r.st.stage = 'curator'; push(r) }
+      if (p.given.length >= CRITTERS_FOR_CURATOR) {
+        // 交满了：周叔把馆长的帐篷包交给你，挑地方放（按博物馆的大小）
+        r.st.stage = 'curator'
+        if (!ctx.addItem(s, 'kit_curator')) toast(s, '口袋满了，等会儿再找周叔拿帐篷')
+        push(r)
+      }
       ctx.sendInv(s)
       sendProg(s)
+    },
+
+    // 拿铲子挖面前那一格：化石点出未鉴定的化石（口袋满了就掉在地上）
+    dig(s: S, m: { tx: number, ty: number, slot: number }) {
+      const r = isleOfScene(s.scene)
+      if (!r || !toolAt(s, m.slot, ['shovel'])) return
+      if (!nearPx(s, (m.tx + 0.5) * TILE, (m.ty + 0.5) * TILE, 2)) return
+      const d = r.st.digs?.find(x => x.tx === m.tx && x.ty === m.ty)
+      if (!d) return
+      r.st.digs = r.st.digs!.filter(x => x !== d)
+      wear(s, m.slot)
+      if (!ctx.addItem(s, 'fossil')) drop(r, 'fossil', (m.tx + 0.5) * TILE, (m.ty + 0.7) * TILE)
+      ctx.send(s, { t: 'toast', text: '挖到了化石！' })
+      ctx.sendInv(s)
+      push(r)
+    },
+
+    // 请馆长鉴定：口袋里所有未鉴定的化石一次鉴定完
+    assess(s: S) {
+      const r = isleHere(s)
+      if (!r || !CURATOR_STAGES.includes(r.st.stage) || r.st.stage === 'curatorHere' || !byCurator(r, s)) return
+      const items: string[] = []
+      s.inv.forEach((x, i) => {
+        if (x?.id !== 'fossil') return
+        const f = FOSSILS[Math.floor(Math.random() * FOSSILS.length)]
+        s.inv[i] = { id: `fos_${f.id}`, n: 1 }
+        items.push(`fos_${f.id}`)
+      })
+      if (!items.length) return
+      ctx.send(s, { t: 'assessed', items })
+      ctx.sendInv(s)
+    },
+
+    // 捐给博物馆：鱼、虫、鉴定过的化石，每种只收第一件
+    museumDonate(s: S, slot: number) {
+      const r = isleHere(s)
+      const it = s.inv[slot]
+      if (!r || !['museum15', 'museumBuild', 'museumOpen'].includes(r.st.stage) || !it || !byCurator(r, s)) return
+      if (!ITEMS[it.id]?.critter && !it.id.startsWith('fos_')) return
+      const mu = (r.st.museum ??= { donated: [], base: 0 })
+      if (mu.donated.includes(it.id)) { toast(s, '这个博物馆里已经有了'); return }
+      ctx.takeItem(s, it.id)
+      mu.donated.push(it.id)
+      if (r.st.stage === 'museum15' && mu.donated.length - mu.base >= MUSEUM_GOAL) { r.st.stage = 'museumBuild'; r.st.museumDay = ctx.today() }
+      ctx.sendInv(s)
+      push(r)
     },
 
     // 帐篷里阿海的小摊

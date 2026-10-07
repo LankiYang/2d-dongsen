@@ -20,6 +20,7 @@ import { TitleScene, SHOTS } from './island/title.ts'
 import { TouchControls, isTouchDevice } from './ui/touch.ts'
 import { IsleScene } from './isle/scene.ts'
 import { TentScene } from './isle/tent.ts'
+import { MuseumScene } from './isle/museum.ts'
 import { runCheckin } from './ui/checkin.ts'
 
 // 全局最近邻采样：像素画绝不能被插值糊掉（光照图单独指定线性）
@@ -69,6 +70,7 @@ async function boot() {
   // 2D动森：自己的岛、帐篷里面（按编号实例化）
   game.register('isle:', id => new IsleScene(game, Number(id.slice(5))))
   game.register('tent:', id => new TentScene(game, Number(id.slice(5))))
+  game.register('museum:', id => new MuseumScene(game, Number(id.slice(7))))
   ;(window as any).__tide = {
     game, state,
     // 开发调试：把当前画面存到 art/preview/shots/<name>.png

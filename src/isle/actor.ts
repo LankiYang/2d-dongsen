@@ -32,7 +32,7 @@ export class Actor {
   }
 
   private frame(dir: Dir, f: number): Texture {
-    if ('villager' in this.kind) return this.assets.island[this.kind.villager]
+    if ('villager' in this.kind) return (this.moving && (dir === 'left' || dir === 'right') && this.assets.island[`${this.kind.villager}_side`]) || this.assets.island[this.kind.villager]
     const row = dir === 'left' || dir === 'right' ? 'side' : dir
     return this.assets.npcs[`${this.kind.staff}_${row}_${f}`] ?? this.assets.npcs[`${this.kind.staff}_down_0`]
   }

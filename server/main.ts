@@ -713,7 +713,7 @@ function helloIsle(ws: WebSocket, row: any): Session {
   while (inv.length < INV_SIZE) inv.push(null)
   let scene = String(row.scene ?? '') as SceneId
   let x = row.x, y = row.y
-  if (!scene.startsWith('isle:') && !scene.startsWith('tent:')) { scene = `isle:${row.isle}`; const a = isles.arrive(row.isle); x = a.x; y = a.y }
+  if (!scene.startsWith('isle:') && !scene.startsWith('tent:') && !scene.startsWith('museum:')) { scene = `isle:${row.isle}`; const a = isles.arrive(row.isle); x = a.x; y = a.y }
   const s: Session = {
     ws, id: row.id, token: row.token, name: row.name, hue: row.hue, coins: row.coins, inv,
     scene, x, y, dir: 'down', moving: false, lastMoveAt: Date.now(), lastHitAt: 0, diveCatch: [], holding: null,
@@ -850,6 +850,9 @@ function handle(s: Session, m: ClientMsg) {
     case 'give': life.give(s, m.slot); break
     case 'isleShop': life.shop(s, m); break
     case 'payBill': life.payBill(s, m.with); break
+    case 'dig': life.dig(s, m); break
+    case 'assess': life.assess(s); break
+    case 'museumDonate': life.museumDonate(s, m.slot); break
     case 'move': {
       if (!Number.isFinite(m.x) || !Number.isFinite(m.y)) return
       const now = Date.now()

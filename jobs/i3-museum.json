@@ -1,0 +1,63 @@
+[
+  {
+    "name": "i3_curator",
+    "style": "HD_CHAR",
+    "refs": [
+      "art/raw/i1_villagers.png"
+    ],
+    "prompt": "A character lineup of 2 cute anthropomorphic animals standing in one single row facing the viewer with generous empty white space between them, full body, feet at the same baseline, in exactly the same cute chibi style, proportions and outline as the reference villagers: 1) a kind old sea turtle professor, a naturalist: round little glasses, a soft green shell on his back, a khaki explorer vest with pockets over a white shirt, a small bow tie, holding a little brown notebook, gentle sleepy smile; 2) the same turtle professor seen exactly from the side walking to the right. No ground, no shadows"
+  },
+  {
+    "name": "i3_curator_tent",
+    "style": "HD_LAND",
+    "refs": [
+      "art/raw/i1_tents.png"
+    ],
+    "prompt": "A single big friendly field research tent seen from the front with the roof slightly from above, centered, in the same style as the reference tents: a mint green and cream canvas tent with a rounded roof, the front flap open showing a small wooden table with a magnifying glass and a jar inside, a little brass telescope on a tripod beside the entrance, a small flag with a simple spiral shell emblem on top. It stands directly on the white background: NO grass, NO ground patch, NO shadow"
+  },
+  {
+    "name": "i3_museum",
+    "style": "HD_LAND",
+    "refs": [
+      "art/raw/hd_house.png"
+    ],
+    "prompt": "A single cute small island natural history museum building seen straight from the front (front elevation, the front wall faces the viewer, the roof seen slightly from above), centered, in the same smooth cozy style as the reference house: warm cream stone walls, a teal green dome in the middle with a little round window, four short white columns at the entrance, big wooden double doors in the middle with a small canopy, two tall arched windows on each side, a stone relief above the doors showing a simple fish, a butterfly and a spiral ammonite (no letters), flower boxes under the windows, symmetric. Nothing else: NO windsock, NO flagpole, NO tower, NO lantern. The building stands directly on the white background: NO grass, NO ground patch, NO shadow"
+  },
+  {
+    "name": "i3_museum_props",
+    "style": "HD_LAND",
+    "refs": [
+      "art/raw/i2_props.png"
+    ],
+    "prompt": "A sprite sheet of 8 separate museum furniture objects in two rows of four with generous empty white space between them, seen from the front with the top slightly from above, same style as the reference: 1) a wide empty glass aquarium tank on a low wooden stand, with clear blue water, pale sand, two small rocks and green seaweed, no fish, 2) an empty glass bug display case on a wooden stand with a little leafy branch and moss inside, no insects, 3) a short round cream stone exhibit pedestal, empty top, 4) a wooden museum reception desk with a small brass bell, 5) a potted fern in a round ceramic pot, 6) a simple wooden bench, 7) a red velvet rope barrier hanging between two brass posts, 8) a small blank wooden placard on a short stand. No ground patches, no shadows"
+  },
+  {
+    "name": "i3_dig",
+    "style": "HD_LAND",
+    "prompt": "A sprite sheet of 3 separate small ground marks in one single row with generous empty white space between them, seen from above at a three-quarter angle, soft smooth cozy game style: 1) a small four-pointed star-shaped crack in brown soil, like a dig spot, 2) a small freshly dug round hole in brown soil with a little pile of dirt beside it, 3) a small mound of loose dirt with a tiny sprout. Nothing else, no grass around, no shadows"
+  },
+  {
+    "name": "i3_items",
+    "style": "HD_ICON",
+    "refs": [
+      "art/raw/i2_tools.png"
+    ],
+    "prompt": "A sprite sheet of 4 separate small item icons in one single row with generous empty white space between them, same style as the reference icons: 1) a long simple wooden vaulting pole, drawn diagonally, 2) an unidentified fossil: a rough grey rock with a faint spiral shell imprint, 3) a rolled-up mint green tent kit in a cloth bag with a little spiral shell tag, 4) a small brown paper museum ticket with a fish symbol. Each icon has its own clear outline, no shadows, no text"
+  },
+  {
+    "name": "i3_fossils_a",
+    "style": "HD_ICON",
+    "refs": [
+      "art/raw/i2_shells.png"
+    ],
+    "prompt": "A sprite sheet of 8 separate cute fossil icons in two rows of four with generous empty white space between them, same cute style as the reference, each clearly recognizable: 1) a golden amber drop with a tiny insect inside, 2) a spiral ammonite fossil, 3) a trilobite fossil, 4) a big triangular megalodon shark tooth, 5) a lumpy brown coprolite fossil, 6) a stone slab with a three-toed dinosaur footprint, 7) a stone slab with a small fossil fish skeleton, 8) a tiny fossil skeleton of an early mammal in a stone slab. Each icon has its own clear outline, no shadows, no text"
+  },
+  {
+    "name": "i3_fossils_b",
+    "style": "HD_ICON",
+    "refs": [
+      "art/raw/i2_shells.png"
+    ],
+    "prompt": "A sprite sheet of 8 separate cute fossil icons in two rows of four with generous empty white space between them, same cute style as the reference, cream bone colors, each clearly recognizable: 1) a fossil skull of a giant prehistoric sea turtle (archelon), 2) a tyrannosaurus rex fossil skull, 3) a triceratops fossil skull with three horns and a frill, 4) a stegosaurus fossil tail with spikes, 5) a woolly mammoth fossil skull with curved tusks, 6) a saber-toothed cat fossil skull with long fangs, 7) an archaeopteryx fossil with feathers imprinted in a stone slab, 8) a pterosaur fossil wing bone. Each icon has its own clear outline, no shadows, no text"
+  }
+]

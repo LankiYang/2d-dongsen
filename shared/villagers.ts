@@ -112,3 +112,6 @@ export const DAILY_LINES: Record<Personality, string[]> = {
   peppy: ['我今天看到一只超漂亮的蝴蝶！差一点就抓到了', '岛上的一切都好新鲜！明天会有什么呢', '我们来比赛谁先钓到大鱼吧'],
   snooty: ['在这里生活，总得讲究一点', '我不太喜欢虫子，不过蝴蝶还算优雅', '这座岛……还有很大的改进空间'],
 }
+
+// 博物馆馆长（原作是猫头鹰；我们的是一位老海龟博物学家）：说话慢吞吞，讲起化石就停不下来
+export const CURATOR = { id: 'npc_turtle', name: '龟教授', title: '博物学家', voice: 0.55 }

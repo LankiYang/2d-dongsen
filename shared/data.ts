@@ -3,6 +3,7 @@ import { FURNITURE } from './furniture.ts'
 import { hash2 } from './noise.ts'
 import { VILLAGERS, VILLAGER_IDS } from './villagers.ts'
 import { FISHES, BUGS } from './critters.ts'
+import { FOSSILS } from './fossils.ts'
 
 export const TILE = 24               // 岛屿地块边长（美术像素）
 // ── 世界时钟（动森方向：游戏时间就是现实时间，北京时间）──
@@ -59,7 +60,7 @@ export interface ItemDef {
   atlas?: 'icons' | 'sea' | 'furniture' | 'icons_hd'
   price?: number        // 卖价
   buy?: number          // 在鱼摊能买到的价格
-  tool?: 'hoe' | 'can' | 'harpoon' | 'rod' | 'net' | 'axe' | 'shovel'
+  tool?: 'hoe' | 'can' | 'harpoon' | 'rod' | 'net' | 'axe' | 'shovel' | 'pole'
   critter?: 'fish' | 'bug'  // 鱼、虫（能捐博物馆、交给周叔研究）
   seedOf?: CropId
   furniture?: boolean   // 家具（只在家具目录卖）
@@ -212,6 +213,13 @@ Object.assign(ITEMS, {
   flimsy_can: { name: '简易洒水壶', icon: 'icon_flimsy_can', atlas: 'icons_hd', tool: 'can', price: 50 },
   campfire: { name: '篝火', icon: 'icon_campfire', atlas: 'icons_hd', price: 240 },
 } satisfies Record<string, ItemDef>)
+// 化石：挖出来是未鉴定的（不能卖），馆长鉴定以后才是具体的哪一件；撑竿跳过河，不会坏
+Object.assign(ITEMS, {
+  fossil: { name: '化石（未鉴定）', icon: 'icon_fossil', atlas: 'icons_hd' },
+  vaulting_pole: { name: '撑竿', icon: 'icon_vaulting_pole', atlas: 'icons_hd', tool: 'pole', price: 200 },
+  kit_curator: { name: '龟教授的帐篷', icon: 'icon_kit_curator', atlas: 'icons_hd', quest: true },
+} satisfies Record<string, ItemDef>)
+for (const x of FOSSILS) ITEMS[`fos_${x.id}`] = { name: x.name, icon: x.icon, atlas: 'icons_hd', price: x.price }
 for (const x of FISHES) ITEMS[`fsh_${x.id}`] = { name: x.name, icon: x.icon, atlas: 'icons_hd', price: x.price, critter: 'fish' }
 for (const x of BUGS) ITEMS[`bug_${x.id}`] = { name: x.name, icon: x.icon, atlas: 'icons_hd', price: x.price, critter: 'bug' }
 // 每位村民的帐篷包（第 0 天帮他们选位置用）

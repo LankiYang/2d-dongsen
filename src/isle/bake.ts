@@ -9,6 +9,7 @@ import { isleFieldTexture } from './ground.ts'
 export interface IsleBake {
   field: Texture; S: number    // 场纹理：第 i 个采样点在世界坐标 i×S（纹素中心对齐）
   water: Texture; WS: number   // 水面数据：每格 WS 像素，R = 离岸距离（像素 ×4），G = 深度
+  cliff: Float32Array; gw: number; gh: number   // 悬崖层的采样（和场纹理同一套网格），走路碰撞按画出来的崖边算
 }
 
 const cache = new Map<number, IsleBake>()
@@ -63,7 +64,7 @@ export function bakeIsle(isle: Isle): IsleBake {
     img.data[i * 4 + 3] = 255
   }
   g.putImageData(img, 0, 0)
-  const res = { field, S, water: texFrom(c, 'linear'), WS }
+  const res = { field, S, water: texFrom(c, 'linear'), WS, cliff, gw, gh }
   cache.set(isle.seed, res)
   return res
 }

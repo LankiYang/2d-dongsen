@@ -1361,6 +1361,71 @@
         7,
         30
       ]
+    },
+    {
+      "raw": "i3_curator",
+      "names": [
+        "npc_turtle",
+        "npc_turtle_side"
+      ],
+      "heights": [
+        40,
+        40
+      ]
+    },
+    {
+      "raw": "i3_curator_tent",
+      "names": [
+        "curator_tent"
+      ],
+      "heights": [
+        70
+      ]
+    },
+    {
+      "raw": "i3_museum",
+      "names": [
+        "museum"
+      ],
+      "heights": [
+        122
+      ]
+    },
+    {
+      "raw": "i3_museum_props",
+      "names": [
+        "m_aquarium",
+        "m_terrarium",
+        "m_pedestal",
+        "m_desk",
+        "m_fern",
+        "m_bench",
+        "m_rope",
+        "m_placard"
+      ],
+      "heights": [
+        40,
+        40,
+        22,
+        28,
+        30,
+        16,
+        24,
+        26
+      ]
+    },
+    {
+      "raw": "i3_dig",
+      "names": [
+        "dig_spot",
+        "dig_hole",
+        "dig_mound"
+      ],
+      "heights": [
+        12,
+        13,
+        14
+      ]
     }
   ],
   "icons_hd": [
@@ -1645,6 +1710,78 @@
         24,
         24,
         24
+      ]
+    },
+    {
+      "raw": "i3_items",
+      "names": [
+        "icon_vaulting_pole",
+        "icon_fossil",
+        "icon_kit_curator",
+        "icon_ticket"
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "raw": "i3_fossils_a",
+      "names": [
+        "fos_amber",
+        "fos_ammonite",
+        "fos_trilobite",
+        "fos_shark_tooth",
+        "fos_coprolite",
+        "fos_dino_track",
+        "fos_fish",
+        "fos_juramaia"
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "raw": "i3_fossils_b",
+      "names": [
+        "fos_archelon_skull",
+        "fos_trex_skull",
+        "fos_tricera_skull",
+        "fos_stego_tail",
+        "fos_mammoth_skull",
+        "fos_sabertooth_skull",
+        "fos_archaeopteryx",
+        "fos_ptera_wing"
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "raw": "i3_curator",
+      "names": [
+        "face_npc_turtle",
+        null
+      ],
+      "heights": [
+        40,
+        40
       ]
     }
   ]

@@ -67,7 +67,7 @@ export class Game {
   }
 
   // id 可以是完整的场景名，也可以是「isle:」这样的前缀（工厂拿到完整的场景名）
-  register(id: SceneId | 'title' | 'isle:' | 'tent:', make: (id: string) => Scene) { this.factories[id] = make }
+  register(id: SceneId | 'title' | 'isle:' | 'tent:' | 'museum:', make: (id: string) => Scene) { this.factories[id] = make }
 
   start(id: SceneId | 'title') {
     this.sceneId = id

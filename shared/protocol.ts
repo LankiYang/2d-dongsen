@@ -8,13 +8,14 @@ import type { RestoreState } from './restore.ts'
 // 和某位村民的关系（发给客户端的摘要）
 export interface RelPublic { pts: number, talked: boolean, gifted: boolean, gw: number }
 
-// isle:<岛号> = 动森式的岛（每人一座）；tent:<玩家号> = 玩家的帐篷里面
-export type SceneId = 'island' | 'sea' | 'restaurant' | `map:${string}` | `home:${number}` | `isle:${number}` | `tent:${number}`   // map:<地图id> = shared/world 生成的地图
+// isle:<岛号> = 动森式的岛（每人一座）；tent:<玩家号> = 玩家的帐篷里面；museum:<岛号> = 岛上的博物馆里面
+export type SceneId = 'island' | 'sea' | 'restaurant' | `map:${string}` | `home:${number}` | `isle:${number}` | `tent:${number}` | `museum:${number}`   // map:<地图id> = shared/world 生成的地图
 
 // ── 动森式的岛（2D动森，还原原作的流程）──
 // 序章第 0 天的阶段：登岛 → 说明会 → 搭自己的帐篷 → 帮两位村民选位置 → 捡树枝 → 摘水果 → 篝火会起岛名 → 睡觉 → 第 1 天
-// 第 1 天：周叔给手机、开账单 → DIY 教室（5 根树枝做钓竿）→ 研究岛上的生物（交 5 只）→ 馆长要来（第 2 天）
-export type IsleStage = 'arrive' | 'tent' | 'neighbors' | 'branches' | 'fruit' | 'party' | 'sleep' | 'day1' | 'diy' | 'critters' | 'curator'
+// 第 1 天：周叔给手机、开账单 → DIY 教室（5 根树枝做钓竿）→ 研究岛上的生物（交 5 只）→ 给馆长选帐篷位置（curator）
+// 第 2 天起：馆长到了（curatorHere，先打招呼）→ 再捐 15 件（museum15）→ 第二天盖好（museumBuild）→ 博物馆开馆（museumOpen）
+export type IsleStage = 'arrive' | 'tent' | 'neighbors' | 'branches' | 'fruit' | 'party' | 'sleep' | 'day1' | 'diy' | 'critters' | 'curator' | 'curatorWait' | 'curatorHere' | 'museum15' | 'museumBuild' | 'museumOpen'
 export interface TentSpot { tx: number, ty: number }        // 帐篷占地的底边中间那一格
 export interface IsleDrop { id: number, item: ItemId, x: number, y: number, look?: string }   // 地上的东西（水果、树枝、贝壳、杂草、材料）；look = 用哪张图
 export interface IslePublic {
@@ -31,6 +32,9 @@ export interface IslePublic {
   drops: IsleDrop[]
   hemi: 'N' | 'S'
   moneyRock: number            // 今天的钱石是哪块
+  curatorTent: TentSpot | null // 馆长的帐篷（之后原地盖博物馆，占 7×4 格）
+  museum: { donated: string[], base: number }   // 捐过的东西（物品 id）；base = 馆长来时已经有几件（周叔那 5 只）
+  digs: { id: number, tx: number, ty: number }[] // 地上的化石点（星形裂缝）
 }
 
 // 玩家自己的进度（2D动森）：里程、手机、配方、图鉴、统计、成就、账单
@@ -112,6 +116,9 @@ export type ClientMsg =
   | { t: 'give', slot: number }                         // 把生物交给周叔研究
   | { t: 'isleShop', op: 'buy', item: string, n: number } | { t: 'isleShop', op: 'sell', slot: number, all: boolean }
   | { t: 'payBill', with: 'miles' | 'bells' }
+  | { t: 'dig', tx: number, ty: number, slot: number }   // 拿铲子挖面前那一格
+  | { t: 'assess' }                                     // 请馆长鉴定口袋里所有的化石
+  | { t: 'museumDonate', slot: number }                 // 把一件东西捐给博物馆
   | { t: 'move', x: number, y: number, dir: Dir, moving: boolean }
   | { t: 'act', kind: 'till' | 'water' | 'plant' | 'harvest', tx: number, ty: number, slot?: number }
   | { t: 'scene', to: SceneId }
@@ -149,6 +156,7 @@ export type ServerMsg =
   | { t: 'isle', isle: IslePublic }                     // 岛的状态变了（帐篷、捡东西、阶段……）
   | { t: 'prog', prog: ProgPublic }                     // 自己的进度变了
   | { t: 'miles', name: string, miles: number }         // 拿到里程（成就）
+  | { t: 'assessed', items: string[] }                 // 鉴定出来的化石（物品 id）
   | { t: 'got', kind: 'fish' | 'bug', id: string, kept: boolean }       // 钓到 / 抓到了（kept=false：口袋满了放走了）
   | { t: 'players', list: PlayerPublic[] }
   | { t: 'fish', list: FishPublic[] }

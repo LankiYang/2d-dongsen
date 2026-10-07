@@ -2,7 +2,8 @@
 // 画：高清地面（悬崖、河、沙滩）+ 水面 + 地图物件（树、果树、椰子树、石头、花、杂草、树枝）+ 机场、岛务所帐篷、码头 + 帐篷 + 地上的东西。
 // 人：玩家、同岛的其他玩家、工作人员（周叔、阿海、豆豆、老潘）、动物村民。
 // 序章第 0 天（原作的开局）在这里一步步推：说明会 → 搭帐篷 → 帮邻居 → 树枝 → 水果 → 篝火会起岛名 → 回帐篷睡觉。
-// 第 1 天：周叔给手机、说移居费 → DIY 教室（工作台做简易钓竿）→ 钓鱼抓虫交给周叔研究 5 种 → 等博物馆的客人。
+// 第 1 天：周叔给手机、说移居费 → DIY 教室（工作台做简易钓竿）→ 钓鱼抓虫交给周叔研究 5 种 → 给馆长（龟教授）选帐篷位置。
+// 第 2 天起：龟教授到岛（铲子、撑竿配方，化石点，鉴定）→ 再捐 15 件 → 第二天博物馆开馆（museum.ts 是馆里面）。
 // 工具（选中按空格 / 左键）：斧头砍树敲石头、铲子敲石头、钓竿抛竿收竿、捕虫网挥网。鱼和虫在 wildlife.ts，手机、工作台、小摊在 ui.ts。
 // 第 0 天的钟点是游戏定的（下午，欢迎会是晚上），睡醒以后才跟现实时间走。
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
@@ -15,20 +16,22 @@ import { Swayer, swaySplit } from '../fx/sway.ts'
 import { WaterFilter } from '../island/water.ts'
 import { sky } from '../island/scene.ts'
 import { fireworks } from '../island/restore.ts'
-import { IsleGroundFilter } from './ground.ts'
+import { IsleGroundFilter, FACE } from './ground.ts'
 import { bakeIsle } from './bake.ts'
+import type { IsleBake } from './bake.ts'
 import { Actor } from './actor.ts'
 import { Wildlife } from './wildlife.ts'
 import { IsleUI } from './ui.ts'
-import { makeIsle, ISLE_W, ISLE_H, FRUIT_NAME } from '../../shared/isle/gen.ts'
+import { talkCurator } from './curator.ts'
+import { makeIsle, ISLE_W, ISLE_H, FRUIT_NAME, IT } from '../../shared/isle/gen.ts'
 import type { Isle, IsleObj } from '../../shared/isle/gen.ts'
-import { canPlaceTent, tentTiles, isleBlocked } from '../../shared/isle/rules.ts'
-import { VILLAGERS, DAY0_LINES, DAILY_LINES, withPhrase } from '../../shared/villagers.ts'
+import { canPlaceTent, canPlaceFoot, footTiles, tentTiles, isleBlocked, MUSEUM_W, MUSEUM_H, MUSEUM_ROOM } from '../../shared/isle/rules.ts'
+import { VILLAGERS, DAY0_LINES, DAILY_LINES, CURATOR, withPhrase } from '../../shared/villagers.ts'
 import { NPC_INFO } from '../../shared/npcs.ts'
 import type { NpcId } from '../../shared/npcs.ts'
 import { TILE, ITEMS, calendarOf } from '../../shared/data.ts'
 import { FISH_BY, BUG_BY } from '../../shared/critters.ts'
-import { MOVE_BILL, CRITTERS_FOR_CURATOR, RECIPES, CRITTER_REWARDS } from '../../shared/diy.ts'
+import { MOVE_BILL, CRITTERS_FOR_CURATOR, RECIPES, CRITTER_REWARDS, MUSEUM_GOAL } from '../../shared/diy.ts'
 import { hash2 } from '../../shared/noise.ts'
 import type { IslePublic, PlayerPublic, TentSpot, Dir, IsleDrop, ServerMsg } from '../../shared/protocol.ts'
 import { state, selectedItem } from '../state.ts'
@@ -75,6 +78,11 @@ export class IsleScene implements Scene {
   private bench: Sprite
   private toolCd = 0
   private sneak = false
+  private curator: Actor
+  private building: { key: string, c: Container } | null = null   // 馆长的帐篷 / 博物馆
+  private digs = new Map<number, Sprite>()
+  private vault: { fx: number, fy: number, tx: number, ty: number, t: number } | null = null   // 撑竿跳到一半
+  private bk: IsleBake
 
   constructor(private g: Game, public isleId: number) {
     const { assets } = g
@@ -86,7 +94,7 @@ export class IsleScene implements Scene {
     const W = this.view.world
 
     // ── 地面、水面 ──
-    const bk = bakeIsle(this.isle)
+    const bk = this.bk = bakeIsle(this.isle)
     const water = new Sprite(bk.water)
     water.scale.set(bk.WS)
     water.filters = [this.waterFilter]
@@ -134,6 +142,12 @@ export class IsleScene implements Scene {
       this.actors.push(a)
       this.entities.addChild(a.root)
     }
+    // 龟教授（馆长）：第 2 天起站在他的帐篷门口，开馆以后在馆里
+    this.curator = new Actor(assets, { villager: CURATOR.id })
+    this.curator.name = CURATOR.name
+    this.curator.root.visible = false
+    this.actors.push(this.curator)
+    this.entities.addChild(this.curator.root)
     this.me = new Farmer(assets, state.me.hue, state.me.name, true)
     this.me.x = this.me.tx = g.meStart.x
     this.me.y = this.me.ty = g.meStart.y
@@ -279,6 +293,40 @@ export class IsleScene implements Scene {
       this.entities.addChild(c)
       this.tents.set(k, c)
     }
+    // 馆长的帐篷 → 博物馆（原地盖）
+    const bkey = pub.curatorTent ? `${pub.stage === 'museumOpen' ? 'museum' : 'curator_tent'}@${pub.curatorTent.tx},${pub.curatorTent.ty}` : ''
+    if (this.building?.key !== bkey) {
+      this.building?.c.destroy({ children: true })
+      this.building = null
+      if (pub.curatorTent) {
+        const museum = pub.stage === 'museumOpen'
+        const c = new Container()
+        const sh = new Sprite(this.g.assets.shadow(museum ? 150 : 76))
+        sh.y = -1
+        c.addChild(sh, new Sprite(this.g.assets.island[museum ? 'museum' : 'curator_tent'] ?? Texture.EMPTY))
+        c.position.set((pub.curatorTent.tx + 0.5) * TILE, (pub.curatorTent.ty + 1) * TILE - 2)
+        c.zIndex = c.y
+        this.entities.addChild(c)
+        this.building = { key: bkey, c }
+      }
+    }
+    // 化石点（地上的星形裂缝）
+    const dseen = new Set<number>()
+    for (const d of pub.digs) {
+      dseen.add(d.id)
+      if (this.digs.has(d.id)) continue
+      const s = new Sprite(this.g.assets.island.dig_spot ?? Texture.EMPTY)
+      s.position.set((d.tx + 0.5) * TILE, (d.ty + 0.8) * TILE)
+      this.shadowLayer.addChild(s)
+      this.digs.set(d.id, s)
+    }
+    for (const [id, s] of this.digs) if (!dseen.has(id)) {
+      // 挖开了：留一个坑，过一会儿消失
+      const hole = new Sprite(this.g.assets.island.dig_hole ?? Texture.EMPTY)
+      hole.position.set(s.x, s.y + 1); this.shadowLayer.addChild(hole)
+      setTimeout(() => { if (!hole.destroyed) hole.destroy() }, 4000)
+      s.destroy(); this.digs.delete(id)
+    }
     this.placeActors(first)
     this.lastStage = pub.stage
     this.renderTracker()
@@ -295,6 +343,10 @@ export class IsleScene implements Scene {
       doudou: pub.stage === 'arrive' ? { x: (airport.x + airport.w - 2) * TILE, y: (airport.y + airport.h + 1.6) * TILE } : { x: pc.x + 46, y: pc.y - 8 },
       laopan: { x: (airport.x + airport.w + 1.2) * TILE, y: (airport.y + airport.h + 0.6) * TILE },
     }
+    // 龟教授：到了以后站在帐篷门口右手边（开馆后在馆里）
+    const here = ['curatorHere', 'museum15', 'museumBuild'].includes(pub.stage) && pub.curatorTent
+    this.curator.root.visible = !!here
+    if (here) spots[CURATOR.id] = { x: (pub.curatorTent!.tx + 0.5) * TILE + 34, y: (pub.curatorTent!.ty + 1.5) * TILE }
     pub.villagers.forEach((v, i) => {
       spots[v.id] = v.tent ? { x: (v.tent.tx + 2.2) * TILE, y: (v.tent.ty + 1.4) * TILE } : { x: pc.x + (i ? 70 : -70), y: pc.y + 34 }
     })
@@ -324,7 +376,12 @@ export class IsleScene implements Scene {
       day1: ['新的一天', '去广场找周叔'],
       diy: ['DIY 教室', `凑 5 根树枝，到岛务所帐篷旁的工作台做简易钓竿（${Math.min(5, have('branch'))}/5）`],
       critters: ['研究岛上的生物', `钓鱼、抓虫，拿 ${CRITTERS_FOR_CURATOR} 种不同的给周叔看（${state.prog?.given.length ?? 0}/${CRITTERS_FOR_CURATOR}）`],
-      curator: ['等客人', '周叔的老朋友明天来岛上'],
+      curator: ['馆长的帐篷', '选中「龟教授的帐篷」，找块宽敞的地方放下（博物馆以后就盖在这里）'],
+      curatorWait: ['等客人', '周叔的老朋友龟教授明天到'],
+      curatorHere: ['龟教授来了', '去他的帐篷打个招呼'],
+      museum15: ['筹建博物馆', `再捐 ${MUSEUM_GOAL} 件新展品给龟教授（${Math.min(MUSEUM_GOAL, pub.museum.donated.length - pub.museum.base)}/${MUSEUM_GOAL}）：鱼、虫、鉴定过的化石`],
+      museumBuild: ['筹建博物馆', '博物馆明天开馆'],
+      museumOpen: ['博物馆开馆了', '进去逛逛吧；新抓到的鱼虫、挖到的化石可以接着捐'],
     }
     const [title, text] = t[pub.stage] ?? ['', '']
     const p = state.prog
@@ -334,10 +391,21 @@ export class IsleScene implements Scene {
   }
 
   // ── 碰撞 ──
+  // 悬崖层（双线性取样烘焙好的网格）
+  private cliffAt(px: number, py: number) {
+    const { cliff, gw, gh, S } = this.bk
+    const fx = Math.max(0, Math.min(gw - 1.001, px / S)), fy = Math.max(0, Math.min(gh - 1.001, py / S))
+    const x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0, i = y0 * gw + x0
+    return (cliff[i] * (1 - tx) + cliff[i + 1] * tx) * (1 - ty) + (cliff[i + gw] * (1 - tx) + cliff[i + gw + 1] * tx) * ty
+  }
   private blockedAt(px: number, py: number) {
     const tx = Math.floor(px / TILE), ty = Math.floor(py / TILE)
     if (tx < 0 || ty < 0 || tx >= ISLE_W || ty >= ISLE_H) return true
-    return this.blocked[ty * ISLE_W + tx] === 1
+    const i = ty * ISLE_W + tx
+    // 悬崖按画出来的边算：脚踩在崖面上（往上 FACE 像素是高处）或者在高处都不能走（还没有梯子）
+    const onCliff = this.cliffAt(px, py - FACE + 3) >= 0.5
+    if (this.isle.level[i] > 0 && this.isle.types[i] === IT.GRASS) return onCliff
+    return this.blocked[i] === 1 || onCliff
   }
   private free(x: number, y: number) {
     return !(this.blockedAt(x - 5, y - 4) || this.blockedAt(x + 5, y - 4) || this.blockedAt(x - 5, y) || this.blockedAt(x + 5, y))
@@ -468,7 +536,11 @@ export class IsleScene implements Scene {
     const opts: string[] = [], acts: (() => Promise<void>)[] = []
     if (pub.stage === 'diy') { opts.push('东西怎么做？'); acts.push(() => this.diyTalk()) }
     if (pub.stage === 'critters') { opts.push('给你看看生物'); acts.push(() => this.giveTalk()) }
-    if (pub.stage === 'curator') { opts.push('你的朋友什么时候来？'); acts.push(() => this.staffSay('zhoushu', '^明天就到！他对鱼、虫子、化石都特别有研究，说不定能在岛上开个博物馆呢。')) }
+    if (pub.stage === 'curator') {
+      if (!this.have('kit_curator')) { opts.push('帐篷呢？'); acts.push(async () => { this.g.net.send({ t: 'prologue', step: 'curatorKit' }); await this.waitMsg('inv'); if (this.have('kit_curator')) await this.staffSay('zhoushu', '^喏，龟教授的帐篷。找块宽敞的地方放下吧。') }) }
+      else { opts.push('帐篷放哪儿好？'); acts.push(() => this.staffSay('zhoushu', '龟教授打算以后在帐篷那儿盖博物馆，所以要挑一块宽敞的地方，周围别有树和石头挡着。')) }
+    }
+    if (pub.stage === 'curatorWait') { opts.push('你的朋友什么时候来？'); acts.push(() => this.staffSay('zhoushu', '^明天就到！他对鱼、虫子、化石都特别有研究。')) }
     if (state.prog?.phone && !state.prog.bill.paid) { opts.push('付移居费'); acts.push(() => this.billTalk()) }
     opts.push('没事')
     const i = await this.staffAsk('zhoushu', pub.stage === 'critters' && !state.prog?.given.length
@@ -522,7 +594,9 @@ export class IsleScene implements Scene {
       const reward = CRITTER_REWARDS.find(([k]) => k === n)
       if (n >= CRITTERS_FOR_CURATOR) {
         await this.staffSay('zhoushu', `^${pick.name}！……好了，这下岛上的生物我心里大概有数了！`)
-        await this.staffSay('zhoushu', '我有个老朋友，对这些东西特别着迷。我这就写信请他来岛上看看，明天应该就到了！')
+        await this.staffSay('zhoushu', '我有个老朋友，叫龟教授，对这些东西特别着迷。我这就写信请他来岛上看看，明天应该就到了！')
+        await this.staffSay('zhoushu', '这是给他准备的帐篷。他以后想在那儿盖博物馆，你帮他挑块宽敞的地方放下吧。')
+        if (this.have('kit_curator')) this.g.hud.toast('拿到了「龟教授的帐篷」')
         return
       }
       const react = [`^哦，是${pick.name}！真是稀奇……`, `^${pick.name}啊！原来岛上也有这个……`, `^这就是${pick.name}吗！我记下了……`][n % 3]
@@ -631,7 +705,9 @@ export class IsleScene implements Scene {
       else if (o.kind === 'tree' || o.kind === 'fruit_tree') consider(o.x, o.y - 6, REACH, 1, '<b>E</b> 摇树', () => this.shake(o))
     }
     if (state.prog?.recipes.length) consider(this.bench.x, this.bench.y - 6, REACH + 8, 2, '<b>E</b> 用工作台', () => this.ui.openCraft())
-    for (const a of this.actors) consider(a.x, a.y - 8, REACH + 4, 2, `<b>E</b> 和${a.name}说话`, () => 'staff' in a.kind ? this.talkStaff(a) : this.talkVillager(a))
+    for (const a of this.actors) if (a.root.visible) consider(a.x, a.y - 8, REACH + 4, 2, `<b>E</b> 和${a.name}说话`, () => a === this.curator ? this.run(() => talkCurator(this.g)) : 'staff' in a.kind ? this.talkStaff(a) : this.talkVillager(a))
+    if (pub.stage === 'museumOpen' && pub.curatorTent) consider((pub.curatorTent.tx + 0.5) * TILE, (pub.curatorTent.ty + 1) * TILE, 24, 2, '<b>E</b> 进博物馆', () => this.enterMuseum())
+    if (ITEMS[selectedItem()?.id ?? '']?.tool === 'shovel') { const d = this.digInFront(); if (d) consider(hx, hy, 99, 4, '<b>空格</b> 挖化石', () => this.useTool()) }
     if (pub.tent) {
       const dx = (pub.tent.tx + 0.5) * TILE, dy = (pub.tent.ty + 1) * TILE
       consider(dx, dy, 22, 2, '<b>E</b> 进帐篷', () => this.enterTent())
@@ -673,7 +749,7 @@ export class IsleScene implements Scene {
   private useTool(): boolean {
     const it = selectedItem()
     const kind = it ? ITEMS[it.id]?.tool : undefined
-    if (!it || !kind || !['rod', 'net', 'axe', 'shovel', 'can'].includes(kind)) return false
+    if (!it || !kind || !['rod', 'net', 'axe', 'shovel', 'can', 'pole'].includes(kind)) return false
     const { net, audio, assets, hud } = this.g
     const me = this.me
     const slot = state.me.selected
@@ -684,9 +760,21 @@ export class IsleScene implements Scene {
       } else if (!this.wild.cast(me, me.dir)) hud.toast('要面朝水面抛竿')
       return true
     }
+    if (kind === 'pole') { if (!this.vault) this.tryVault(); return true }
     if (this.toolCd > 0) return true
     this.toolCd = 0.42
     me.act(it.id, assets.icons_hd[ITEMS[it.id].icon])
+    // 铲子：面前有化石点就挖
+    const dig = kind === 'shovel' ? this.digInFront() : null
+    if (dig) {
+      setTimeout(() => {
+        audio.play('till', 0.6, 0.9)
+        const x = (dig.tx + 0.5) * TILE, y = (dig.ty + 0.8) * TILE
+        for (let i = 0; i < 10; i++) this.fx.spawn({ x: x + (Math.random() - 0.5) * 10, y: y - 2, vx: (Math.random() - 0.5) * 70, vy: -40 - Math.random() * 40, ay: 200, life: 0.5, color: [0x9a6a44, 0xb98458, 0x7a5236][i % 3], w: 2, h: 2 })
+        net.send({ t: 'dig', tx: dig.tx, ty: dig.ty, slot })
+      }, 140)
+      return true
+    }
     if (kind === 'net') {
       const b = this.wild.swingNet(me, me.dir)
       if (b) net.send({ t: 'catch', kind: 'bug', id: b.id, slot })
@@ -716,6 +804,41 @@ export class IsleScene implements Scene {
     }
     return true
   }
+  private enterMuseum() {
+    if (this.g.switching) return
+    const to = `museum:${this.isleId}` as const
+    this.g.net.send({ t: 'scene', to })
+    this.g.meStart = { x: MUSEUM_ROOM.w * TILE / 2, y: MUSEUM_ROOM.h * TILE - 20 }
+    this.g.switchTo(to)
+  }
+  // 面前的化石点
+  private digInFront() {
+    const me = this.me
+    const f: Record<Dir, [number, number]> = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] }
+    const [fdx, fdy] = f[me.dir]
+    const hx = me.x + fdx * 14, hy = me.y - 2 + fdy * 14
+    return state.isle!.digs.find(d => Math.hypot((d.tx + 0.5) * TILE - hx, (d.ty + 0.6) * TILE - hy) < 16) ?? null
+  }
+  // 撑竿：面前是小河（或者池塘窄的地方），对岸 4 格以内有落脚的地方就跳过去
+  private tryVault() {
+    const me = this.me
+    const f: Record<Dir, [number, number]> = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] }
+    const [dx, dy] = f[me.dir]
+    const typeAt = (x: number, y: number) => this.isle.types[Math.floor(y / TILE) * ISLE_W + Math.floor(x / TILE)]
+    let start = -1, end = -1
+    for (let k = 4; k <= 140; k += 3) {
+      const t = typeAt(me.x + dx * k, me.y - 2 + dy * k)
+      const water = t === IT.RIVER || t === IT.POND
+      if (start < 0) { if (water) start = k; else if (k > 22) break }
+      else if (!water) { end = k; break }
+    }
+    if (start < 0) { this.g.hud.toast('对着小河用撑竿，就能跳过去'); return }
+    if (end < 0 || end - start > 4 * TILE) { this.g.hud.toast('河太宽了，跳不过去'); return }
+    const tx = me.x + dx * (end + 12), ty = me.y + dy * (end + 12)
+    if (!this.free(tx, ty)) { this.g.hud.toast('对岸没地方落脚'); return }
+    this.vault = { fx: me.x, fy: me.y, tx, ty, t: 0 }
+    this.g.audio.play('whoosh', 0.45, 0.9)
+  }
   private enterTent() {
     if (this.g.switching) return
     this.g.net.send({ t: 'scene', to: `tent:${state.me.id}` })
@@ -724,22 +847,24 @@ export class IsleScene implements Scene {
   }
 
   // ── 放帐篷：选中帐篷包时在面前显示一个预览，绿色能放、红色不能 ──
-  private kitSpot(): TentSpot {
+  private kitSpot(w = 3, h = 2): TentSpot {
     const me = this.me
-    const f: Record<Dir, [number, number]> = { down: [0, 3], up: [0, -2], left: [-3, 0], right: [3, 0] }
+    const half = Math.floor(w / 2)
+    const f: Record<Dir, [number, number]> = { down: [0, h + 1], up: [0, -2], left: [-(half + 2), 0], right: [half + 2, 0] }
     const [dx, dy] = f[me.dir]
     return { tx: Math.floor(me.x / TILE) + dx, ty: Math.floor((me.y - 4) / TILE) + dy }
   }
   private drawGhost() {
     const it = selectedItem()
     this.ghost.clear()
-    if (!it || !(it.id === 'kit_tent' || it.id.startsWith('kit_vtent_')) || this.busy) return null
-    const spot = this.kitSpot()
-    const why = canPlaceTent(this.isle, state.isle!, spot)
+    if (!it || !(it.id === 'kit_tent' || it.id.startsWith('kit_vtent_') || it.id === 'kit_curator') || this.busy) return null
+    const big = it.id === 'kit_curator'
+    const spot = big ? this.kitSpot(MUSEUM_W, MUSEUM_H) : this.kitSpot()
+    const why = big ? canPlaceFoot(this.isle, state.isle!, spot, MUSEUM_W, MUSEUM_H) : canPlaceTent(this.isle, state.isle!, spot)
     const c = why ? 0xff6b5a : 0x8cf07a
-    for (const [x, y] of tentTiles(spot)) this.ghost.roundRect(x * TILE + 1, y * TILE + 1, TILE - 2, TILE - 2, 4).fill({ color: c, alpha: 0.32 }).stroke({ color: c, alpha: 0.8, width: 1 })
+    for (const [x, y] of big ? footTiles(spot, MUSEUM_W, MUSEUM_H) : tentTiles(spot)) this.ghost.roundRect(x * TILE + 1, y * TILE + 1, TILE - 2, TILE - 2, 4).fill({ color: c, alpha: 0.32 }).stroke({ color: c, alpha: 0.8, width: 1 })
     this.ghost.roundRect(spot.tx * TILE + 4, (spot.ty + 1) * TILE + 4, TILE - 8, TILE - 8, 3).stroke({ color: 0xffffff, alpha: 0.6, width: 1 })
-    return { spot, why }
+    return { spot, why, big }
   }
 
   update(dt: number, time: number) {
@@ -755,7 +880,7 @@ export class IsleScene implements Scene {
       if (input.hit('i', 'tab')) hud.toggleInventory()
     }
     let moving = false
-    const ax = this.busy || hud.dialogOpen() || hud.modalOpen() ? { x: 0, y: 0 } : input.axis()
+    const ax = this.busy || this.vault || hud.dialogOpen() || hud.modalOpen() ? { x: 0, y: 0 } : input.axis()
     this.sneak = input.down('shift')
     if (!this.g.switching && (ax.x || ax.y)) {
       const len = Math.hypot(ax.x, ax.y)
@@ -767,7 +892,11 @@ export class IsleScene implements Scene {
       moving = true
     }
     me.moving = moving
-    this.unstick()
+    if (this.vault) {
+      const v = this.vault
+      v.t = Math.min(1, v.t + dt / 0.75)
+      me.x = v.fx + (v.tx - v.fx) * v.t; me.y = v.fy + (v.ty - v.fy) * v.t
+    } else this.unstick()
 
     // 钓到 / 抓到的弹窗：按一下关掉
     const press = !input.typing() && (input.hit(' ') || input.clicked)
@@ -783,10 +912,10 @@ export class IsleScene implements Scene {
     // 用工具（换了别的东西拿在手上就收线）
     this.toolCd -= dt
     if (this.wild.fishing() && ITEMS[selectedItem()?.id ?? '']?.tool !== 'rod') this.wild.reel()
-    if (!used && !ghost && !this.busy && press) used = this.useTool()
+    if (!used && !ghost && !this.busy && !this.vault && press) used = this.useTool()
     // E：最近的互动
     const near = this.busy || this.g.switching ? null : this.nearest()
-    hud.hint(this.busy || hud.modalOpen() ? null : ghost ? (ghost.why ? `放不了：${ghost.why}` : '<b>空格</b> 在这里搭帐篷') : near?.text ?? null)
+    hud.hint(this.busy || hud.modalOpen() ? null : ghost ? (ghost.why ? `放不了：${ghost.why}` : ghost.big ? '<b>空格</b> 把龟教授的帐篷放在这里（以后博物馆就盖在这一片）' : '<b>空格</b> 在这里搭帐篷') : near?.text ?? null)
     if (near && !this.busy && input.hit('e')) near.act()
 
     if (moving) {
@@ -804,6 +933,13 @@ export class IsleScene implements Scene {
       me.tool.scale.set(side, 1)
       me.tool.rotation = side * (me.dir === 'up' ? 0.1 : 0.6)
       me.tool.position.set(side * 6, -12)
+    } else if (this.vault) {
+      // 撑竿跳：人跟着弧线起落，竿子斜插在身前
+      const k = this.vault.t
+      me.root.y -= Math.sin(k * Math.PI) * 22
+      const tex = this.g.assets.icons_hd.icon_vaulting_pole
+      if (tex) { me.tool.texture = tex; me.tool.visible = true; me.tool.scale.set(1.4); me.tool.rotation = (k - 0.5) * 1.6; me.tool.position.set(0, -8 + Math.sin(k * Math.PI) * 16) }
+      if (k >= 1) { this.vault = null; me.tool.visible = false; audio.play('step_grass', 0.4, 0.8) }
     } else if (!this.wild.fishing() && me.actT <= 0) me.tool.visible = false
     for (const a of this.actors) a.update(dt)
     for (const f of this.others.values()) {
