@@ -16,8 +16,27 @@ export interface IsleSession {
   scene: SceneId
   x: number; y: number
   inv: (Slot | null)[]
+  coins: number
   dirty: boolean
   isle?: number               // 自己的岛
+  prog?: Prog                 // 2D动森的进度（里程、配方、图鉴……）
+}
+// 玩家进度（存在 players.prog）
+export interface Prog {
+  miles: number
+  phone: boolean
+  recipes: string[]
+  pedia: { fish: string[], bugs: string[] }
+  stats: Record<string, number>
+  achieved: Record<string, number>
+  bill: { paid: boolean }
+  given: string[]
+  lastCatch?: number
+}
+export function loadProg(raw: string | null): Prog {
+  let p: Partial<Prog> = {}
+  try { p = raw ? JSON.parse(raw) : {} } catch { p = {} }
+  return { miles: 0, phone: false, recipes: [], pedia: { fish: [], bugs: [] }, stats: {}, achieved: {}, bill: { paid: false }, given: [], ...p }
 }
 export interface IsleCtx<S extends IsleSession> {
   db: DatabaseSync
@@ -39,8 +58,13 @@ interface IsleState {
   dropSeq: number
   shook: Record<number, number>      // 普通树哪天摇过（每天每棵最多掉一次树枝）
   answer: number                     // 机场柜台「带什么去荒岛」的回答
+  day?: number                       // 每日刷新做到哪天了
+  moneyRock?: number                 // 今天的钱石
+  chops?: Record<number, [number, number]>     // 树 id → [哪天, 砍出几块木材]
+  rockHits?: Record<number, [number, number]>  // 石头 id → [哪天, 敲了几下]
+  goldDay?: number                   // 哪天出过金矿石（一天最多一块）
 }
-interface IsleRec { id: number, owner: number, ownerName: string, seed: number, name: string, hemi: 'N' | 'S', st: IsleState }
+export interface IsleRec { id: number, owner: number, ownerName: string, seed: number, name: string, hemi: 'N' | 'S', st: IsleState, fresh?: boolean }   // fresh：每日刷新改过、还没推给客户端
 
 
 export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
@@ -49,24 +73,28 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
   const cols = (db.prepare('PRAGMA table_info(players)').all() as { name: string }[]).map(c => c.name)
   if (!cols.includes('isle')) db.exec('ALTER TABLE players ADD COLUMN isle INTEGER')
   if (!cols.includes('birthday')) db.exec('ALTER TABLE players ADD COLUMN birthday TEXT')
+  if (!cols.includes('prog')) db.exec('ALTER TABLE players ADD COLUMN prog TEXT')
 
+  const hooks: { onLoad?: (r: IsleRec) => void, onPickup?: (s: S, item: string) => void, onPhone?: (s: S) => void } = {}
   const geos = new Map<number, Isle>()
   const geo = (seed: number) => { let g = geos.get(seed); if (!g) { g = makeIsle(seed); geos.set(seed, g) } return g }
   const recs = new Map<number, IsleRec>()
 
   function load(id: number): IsleRec | null {
     const hit = recs.get(id)
-    if (hit) return hit
+    if (hit) { hooks.onLoad?.(hit); return hit }   // 每次取都看一眼换没换日（同一天直接返回）
     const row = db.prepare('SELECT i.*, p.name AS ownerName FROM isles i LEFT JOIN players p ON p.id = i.owner WHERE i.id=?').get(id) as any
     if (!row) return null
     const rec: IsleRec = { id: row.id, owner: row.owner, ownerName: row.ownerName ?? '', seed: row.seed, name: row.name ?? '', hemi: row.hemi === 'S' ? 'S' : 'N', st: JSON.parse(row.data) }
     recs.set(id, rec)
+    hooks.onLoad?.(rec)
     return rec
   }
   const save = (r: IsleRec) => db.prepare('UPDATE isles SET name=?, data=? WHERE id=?').run(r.name, JSON.stringify(r.st), r.id)
   const pub = (r: IsleRec): IslePublic => ({
     id: r.id, owner: r.owner, ownerName: r.ownerName, seed: r.seed, name: r.name, stage: r.st.stage, tent: r.st.tent,
     villagers: r.st.villagers, removed: r.st.removed, fruitTaken: r.st.fruitTaken, drops: r.st.drops, hemi: r.hemi,
+    moneyRock: r.st.moneyRock ?? -1,
   })
   const sceneOf = (r: IsleRec): SceneId => `isle:${r.id}`
   function push(r: IsleRec) {
@@ -109,7 +137,7 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
   }
 
   return {
-    geo, load, pub, create, sceneOf,
+    geo, load, pub, create, sceneOf, push, save, hooks, isleOfScene, nearPx, toast, drop,
 
     // 登录：自己的岛（没有的返回 null，要先去机场办手续）
     welcomeIsle(s: S): IslePublic | null {
@@ -155,11 +183,14 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
         if (!d || !nearPx(s, d.x, d.y, 2.2)) return
         if (!ctx.addItem(s, d.item)) { toast(s, '口袋满了'); return }
         r.st.drops = r.st.drops.filter(x => x !== d)
+        hooks.onPickup?.(s, d.item)
       } else if (m.obj !== undefined) {
         const o = geo(r.seed).objects.find(x => x.id === m.obj)
-        if (!o || o.kind !== 'branch' || r.st.removed.includes(o.id) || !nearPx(s, o.x, o.y, 2.2)) return
-        if (!ctx.addItem(s, 'branch')) { toast(s, '口袋满了'); return }
+        if (!o || (o.kind !== 'branch' && o.kind !== 'weed') || r.st.removed.includes(o.id) || !nearPx(s, o.x, o.y, 2.2)) return
+        const item = o.kind === 'weed' ? 'weeds' : 'branch'
+        if (!ctx.addItem(s, item)) { toast(s, '口袋满了'); return }
         r.st.removed.push(o.id)
+        hooks.onPickup?.(s, item)
       } else return
       ctx.sendInv(s)
       push(r)
@@ -229,11 +260,15 @@ export function initIsles<S extends IsleSession>(ctx: IsleCtx<S>) {
         if (!nearPx(s, plazaC.x, plazaC.y, 12) || !ctx.takeItem(s, g.fruit, 6)) return
         st.stage = 'party'
       } else if (m.step === 'name' && st.stage === 'party') {
-        const name = String(m.name ?? '').replace(/[\s<>]/g, '').slice(0, 8)
+        const name = String(m.name ?? '').replace(/[\s<>]/g, '').replace(/岛$/, '').slice(0, 8)
         if (!name) return
         r.name = name
         ctx.addItem(s, 'cot')
         st.stage = 'sleep'
+      } else if (m.step === 'phone' && st.stage === 'day1') {
+        if (!nearPx(s, plazaC.x, plazaC.y, 12)) return
+        hooks.onPhone?.(s)
+        st.stage = 'diy'
       } else if (m.step === 'sleep' && st.stage === 'sleep') {
         if (s.scene !== `tent:${r.owner}`) return
         ctx.takeItem(s, 'cot')

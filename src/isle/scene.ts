@@ -2,6 +2,8 @@
 // 画：高清地面（悬崖、河、沙滩）+ 水面 + 地图物件（树、果树、椰子树、石头、花、杂草、树枝）+ 机场、岛务所帐篷、码头 + 帐篷 + 地上的东西。
 // 人：玩家、同岛的其他玩家、工作人员（周叔、阿海、豆豆、老潘）、动物村民。
 // 序章第 0 天（原作的开局）在这里一步步推：说明会 → 搭帐篷 → 帮邻居 → 树枝 → 水果 → 篝火会起岛名 → 回帐篷睡觉。
+// 第 1 天：周叔给手机、说移居费 → DIY 教室（工作台做简易钓竿）→ 钓鱼抓虫交给周叔研究 5 种 → 等博物馆的客人。
+// 工具（选中按空格 / 左键）：斧头砍树敲石头、铲子敲石头、钓竿抛竿收竿、捕虫网挥网。鱼和虫在 wildlife.ts，手机、工作台、小摊在 ui.ts。
 // 第 0 天的钟点是游戏定的（下午，欢迎会是晚上），睡醒以后才跟现实时间走。
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
 import type { Game, Scene } from '../game.ts'
@@ -16,18 +18,27 @@ import { fireworks } from '../island/restore.ts'
 import { IsleGroundFilter } from './ground.ts'
 import { bakeIsle } from './bake.ts'
 import { Actor } from './actor.ts'
+import { Wildlife } from './wildlife.ts'
+import { IsleUI } from './ui.ts'
 import { makeIsle, ISLE_W, ISLE_H, FRUIT_NAME } from '../../shared/isle/gen.ts'
 import type { Isle, IsleObj } from '../../shared/isle/gen.ts'
 import { canPlaceTent, tentTiles, isleBlocked } from '../../shared/isle/rules.ts'
-import { VILLAGERS, DAY0_LINES, withPhrase } from '../../shared/villagers.ts'
+import { VILLAGERS, DAY0_LINES, DAILY_LINES, withPhrase } from '../../shared/villagers.ts'
 import { NPC_INFO } from '../../shared/npcs.ts'
 import type { NpcId } from '../../shared/npcs.ts'
-import { TILE, ITEMS } from '../../shared/data.ts'
-import type { IslePublic, PlayerPublic, TentSpot, Dir } from '../../shared/protocol.ts'
+import { TILE, ITEMS, calendarOf } from '../../shared/data.ts'
+import { FISH_BY, BUG_BY } from '../../shared/critters.ts'
+import { MOVE_BILL, CRITTERS_FOR_CURATOR, RECIPES, CRITTER_REWARDS } from '../../shared/diy.ts'
+import { hash2 } from '../../shared/noise.ts'
+import type { IslePublic, PlayerPublic, TentSpot, Dir, IsleDrop, ServerMsg } from '../../shared/protocol.ts'
 import { state, selectedItem } from '../state.ts'
 
 const SPEED = 92
 const REACH = 26
+// 第 0 天白天 / 晚上（钟点是游戏定的）；之后的阶段跟现实时间走
+const DAY0 = ['arrive', 'tent', 'neighbors', 'branches', 'fruit']
+const NIGHT0 = ['party', 'sleep']
+const HELP = '<b>WASD</b> 移动 · <b>Shift</b> 蹑手蹑脚 · <b>空格/左键</b> 用工具 · <b>E</b> 互动 · <b>P</b> 手机 · <b>I</b> 背包 · <b>1-8</b> 切换 · <b>滚轮</b> 缩放'
 
 type Near = { text: string, act: () => void, prio: number, d: number }
 
@@ -59,6 +70,11 @@ export class IsleScene implements Scene {
   private party = false         // 欢迎会（晚上的灯光、篝火）
   private camTarget: { x: number, y: number } | null = null
   private lastStage = ''
+  wild: Wildlife
+  ui: IsleUI
+  private bench: Sprite
+  private toolCd = 0
+  private sneak = false
 
   constructor(private g: Game, public isleId: number) {
     const { assets } = g
@@ -79,12 +95,15 @@ export class IsleScene implements Scene {
     ground.position.set(-bk.S / 2, -bk.S / 2)
     ground.filters = [this.groundFilter]
     this.entities.sortableChildren = true
-    W.addChild(water, ground, this.dockGraphics(), this.shadowLayer, this.entities, this.fx.layer, this.ghost)
+    this.wild = new Wildlife(assets, g.audio, this.fx, this.isle, this.entities, pub.hemi)
+    W.addChild(water, ground, this.wild.water, this.dockGraphics(), this.shadowLayer, this.entities, this.fx.layer, this.ghost)
 
     // ── 建筑 ──
     const { airport, plaza } = this.isle
     this.addSprite('airport', (airport.x + airport.w / 2) * TILE, (airport.y + airport.h) * TILE, true)
     this.addSprite('rs_tent', (plaza.x + plaza.w / 2) * TILE, (plaza.y + 4) * TILE, true)
+    // DIY 工作台：岛务所帐篷右手边（第 1 天的 DIY 教室起能用）
+    this.bench = this.addSprite('workbench', (plaza.x + plaza.w / 2) * TILE + 74, (plaza.y + 4.7) * TILE, true)
     // 水上飞机停在机场南边的海面上
     let py = airport.y + airport.h
     const px = airport.x + airport.w + 3
@@ -123,14 +142,25 @@ export class IsleScene implements Scene {
     this.ghost.zIndex = 1e6
 
     g.app.stage.addChild(this.view.display, this.overlay)
+    this.ui = new IsleUI(g)
     this.unsub.push(
       g.net.on('isle', m => { state.isle = m.isle; this.applyIsle() }),
+      // 钓到 / 抓到：图鉴里还没有的算新登录（进度消息在这之后才到）
+      g.net.on('got', m => {
+        const fresh = !(m.kind === 'fish' ? state.prog?.pedia.fish : state.prog?.pedia.bugs)?.includes(m.id)
+        this.ui.showCatch(m.kind, m.id, m.kept, fresh)
+        g.audio.play('catch', 0.6)
+      }),
+      g.net.on('miles', m => this.ui.milesToast(m.name, m.miles)),
+      g.net.on('prog', () => { this.ui.refresh(); this.renderTracker() }),
+      g.net.on('inv', () => { this.ui.refresh(); this.renderTracker() }),
       g.net.on('players', m => this.syncPlayers(m.list)),
       g.net.on('left', m => this.removeOther(m.id)),
     )
     this.view.post.set('uMode', 0)
     g.hud.setSeaMode(false)
     document.body.classList.add('isle')
+    document.getElementById('help')!.innerHTML = HELP
     this.applyIsle(true)
     this.snapCamera()
   }
@@ -175,6 +205,20 @@ export class IsleScene implements Scene {
     }
     this.objs.set(o.id, { root, sw, sh, o, tex: texName })
   }
+  private dropSprite(d: IsleDrop) {
+    const { island, icons_hd } = this.g.assets
+    if (d.item === 'weeds' || d.look === 'weed') {
+      const s = new Sprite(island.grass_tall ?? Texture.EMPTY)
+      s.scale.set(d.id % 2 ? -0.55 : 0.55, 0.55)
+      return s
+    }
+    const own = island[`drop_${d.item}`]
+    if (own) return new Sprite(own)
+    const tex = icons_hd[ITEMS[d.item]?.icon ?? ''] ?? Texture.EMPTY
+    const s = new Sprite(tex)
+    s.scale.set(Math.min(1, 13 / Math.max(1, tex.width, tex.height)))
+    return s
+  }
   // 码头：木板栈桥，往海里伸
   private dockGraphics() {
     const d = this.isle.dock, gfx = new Graphics()
@@ -191,6 +235,7 @@ export class IsleScene implements Scene {
   private applyIsle(first = false) {
     const pub = state.isle!
     this.blocked = isleBlocked(this.isle, pub)
+    { const by = Math.floor((this.bench.y - 4) / TILE); for (const bx of [this.bench.x - 14, this.bench.x + 14]) this.blocked[by * ISLE_W + Math.floor(bx / TILE)] = 1 }
     // 果树摘光 / 重新结果要换图：先记下来，遍历完再重建（边遍历边往 Map 里加会被再遍历到）
     const redo: IsleObj[] = []
     for (const [id, e] of this.objs) {
@@ -210,7 +255,7 @@ export class IsleScene implements Scene {
     for (const d of pub.drops) {
       seen.add(d.id)
       if (this.drops.has(d.id)) continue
-      const s = new Sprite(this.g.assets.island[`drop_${d.item}`] ?? Texture.EMPTY)
+      const s = this.dropSprite(d)
       s.position.set(d.x, d.y); s.zIndex = d.y
       this.entities.addChild(s)
       this.drops.set(d.id, s)
@@ -235,7 +280,8 @@ export class IsleScene implements Scene {
       this.tents.set(k, c)
     }
     this.placeActors(first)
-    if (pub.stage !== this.lastStage) { this.lastStage = pub.stage; this.renderTracker() }
+    this.lastStage = pub.stage
+    this.renderTracker()
   }
 
   // 人站在哪：按序章阶段摆（第 0 天大家都围着广场转）
@@ -275,10 +321,15 @@ export class IsleScene implements Scene {
       fruit: ['准备欢迎会', `摘 6 个${fruit}交给周叔：走到树下按 E 摇一摇（${Math.min(6, have(this.isle.fruit))}/6）`],
       party: ['欢迎会', '到广场找周叔'],
       sleep: ['好好睡一觉', '回自己的帐篷，用折叠床睡觉'],
-      day1: ['新的一天', '去广场找周叔（第 1 天的内容还在做）'],
+      day1: ['新的一天', '去广场找周叔'],
+      diy: ['DIY 教室', `凑 5 根树枝，到岛务所帐篷旁的工作台做简易钓竿（${Math.min(5, have('branch'))}/5）`],
+      critters: ['研究岛上的生物', `钓鱼、抓虫，拿 ${CRITTERS_FOR_CURATOR} 种不同的给周叔看（${state.prog?.given.length ?? 0}/${CRITTERS_FOR_CURATOR}）`],
+      curator: ['等客人', '周叔的老朋友明天来岛上'],
     }
     const [title, text] = t[pub.stage] ?? ['', '']
-    el.innerHTML = `<div class="tq">${title}</div><div>${text}</div>`
+    const p = state.prog
+    const bill = p?.phone && !p.bill.paid ? `<div class="tsub">移居费：${MOVE_BILL.miles.toLocaleString()} 里程（现在 ${p.miles.toLocaleString()}）或 ${MOVE_BILL.bells.toLocaleString()} 铃钱</div>` : ''
+    el.innerHTML = `<div class="tq">${title}</div><div>${text}</div>${bill}`
     el.classList.remove('hidden')
   }
 
@@ -386,12 +437,114 @@ export class IsleScene implements Scene {
           } else await this.staffSay('zhoushu', `再摘 6 个${fruit}来就够了。${fruit}树就在广场附近。`)
         } else if (pub.stage === 'party') await this.welcomeParty()
         else if (pub.stage === 'sleep') await this.staffSay('zhoushu', '今天辛苦啦，早点回帐篷睡吧。折叠床在你口袋里，进帐篷铺开就能睡。')
-        else await this.staffSay('zhoushu', `^早上好！${pub.name ? pub.name + '岛' : '岛上'}的第一个早晨！……接下来的事（手机、DIY 教室）还在准备，过阵子再来找我。`)
-      } else if (id === 'ahai') await this.staffSay('ahai', pub.stage === 'arrive' ? '欢迎来到无人岛！大家在广场集合，周叔要给大家讲讲岛上的事。' : '^以后岛务所帐篷里有小摊，缺什么、要卖什么都来找我。')
-      else if (id === 'doudou') await this.staffSay('doudou', pub.stage === 'arrive' ? '^我们到啦！快去广场，周叔在等大家！' : '^我在帮阿海叔叔看摊！')
+        else await this.zhoushuDay()
+      } else if (id === 'ahai') {
+        if (DAY0.includes(pub.stage) || NIGHT0.includes(pub.stage)) await this.staffSay('ahai', pub.stage === 'arrive' ? '欢迎来到无人岛！大家在广场集合，周叔要给大家讲讲岛上的事。' : '^明天起岛务所帐篷里有小摊，缺什么、要卖什么都来找我。')
+        else {
+          const i = await this.staffAsk('ahai', '^欢迎光临！要买点什么，还是卖点什么？岛上捡的、钓的、抓的，我都收。', ['看看', '算了'], 1)
+          if (i === 0) { this.g.hud.closeDialog(); this.ui.openShop() }
+        }
+      } else if (id === 'doudou') {
+        if (pub.stage === 'arrive') await this.staffSay('doudou', '^我们到啦！快去广场，周叔在等大家！')
+        else if (DAY0.includes(pub.stage) || NIGHT0.includes(pub.stage)) await this.staffSay('doudou', '^我在帮阿海叔叔看摊！')
+        else await this.staffSay('doudou', ['^钓鱼的时候，要等浮漂「噗通」一下整个沉下去再收竿哦！只是轻轻点一下的话，那是鱼在试探。', '^手机里的「岛务里程」，做什么都能攒！拔草、捡贝壳、钓鱼……我已经攒了好多啦。', '^抓虫的时候按住 Shift 慢慢走过去，虫子就不会被吓跑啦。'][Math.floor(hash2(state.day, 3, 1) * 3)])
+      }
       else if (id === 'laopan') await this.staffSay('laopan', '我开飞机。等岛上的机场开起来，带你去别的岛转转。')
     })
   }
+  private staffAsk(id: NpcId, text: string, options: string[], cancel: number) {
+    const i = NPC_INFO[id]
+    return this.g.hud.ask({ name: i.name, title: i.title, face: id, voice: i.voice, text }, options, cancel)
+  }
+  // 等服务端回一条消息（最多等 ms 毫秒）
+  private waitMsg<T extends ServerMsg['t']>(t: T, ms = 1500) {
+    return new Promise<void>(res => { const off = this.g.net.on(t, () => { off(); clearTimeout(timer); res() }); const timer = setTimeout(() => { off(); res() }, ms) })
+  }
+
+  // ── 周叔：第 1 天起 ──
+  private async zhoushuDay() {
+    const pub = state.isle!
+    if (pub.stage === 'day1') { await this.phoneTalk(); return }
+    const opts: string[] = [], acts: (() => Promise<void>)[] = []
+    if (pub.stage === 'diy') { opts.push('东西怎么做？'); acts.push(() => this.diyTalk()) }
+    if (pub.stage === 'critters') { opts.push('给你看看生物'); acts.push(() => this.giveTalk()) }
+    if (pub.stage === 'curator') { opts.push('你的朋友什么时候来？'); acts.push(() => this.staffSay('zhoushu', '^明天就到！他对鱼、虫子、化石都特别有研究，说不定能在岛上开个博物馆呢。')) }
+    if (state.prog?.phone && !state.prog.bill.paid) { opts.push('付移居费'); acts.push(() => this.billTalk()) }
+    opts.push('没事')
+    const i = await this.staffAsk('zhoushu', pub.stage === 'critters' && !state.prog?.given.length
+      ? '^做得真好！这么快就上手了。……对了，我一直想研究岛上都有些什么生物。钓到的鱼、抓到的虫，能拿来给我看看吗？'
+      : '^嗯？有什么事吗？', opts, opts.length - 1)
+    if (acts[i]) await acts[i]()
+  }
+  // 第 1 天早上：手机、里程、移居费、DIY 教室
+  private async phoneTalk() {
+    const pub = state.isle!
+    await this.staffSay('zhoushu', `^早上好！昨晚睡得还好吗？${pub.name ? pub.name + '岛' : '岛上'}的第一个早晨，空气真新鲜！`)
+    await this.staffSay('zhoushu', '对了，这个给你。这是岛务手机，地图、图鉴、DIY 配方都在里面，在岛上生活少不了它。')
+    this.g.net.send({ t: 'prologue', step: 'phone' })
+    await this.waitMsg('prog')
+    this.g.hud.toast('拿到了「岛务手机」！按 P 打开')
+    await this.staffSay('zhoushu', '^在岛上做了什么事，手机都会记下来，攒成「岛务里程」。你看，搬到岛上来这件事本身就算一件！')
+    await this.staffSay('zhoushu', `……还有件事得说清楚。这次移居的机票、帐篷这些，一共是 ${MOVE_BILL.bells.toLocaleString()} 铃钱。`)
+    await this.staffSay('zhoushu', `^不用急！也可以用 ${MOVE_BILL.miles.toLocaleString()} 岛务里程来付，什么时候付都行。`)
+    this.camTarget = { x: this.bench.x, y: this.bench.y - 10 }
+    await this.staffSay('zhoushu', '岛上现在什么工具都没有……我来教你做东西吧！这是工作台，用 5 根树枝就能做一根简易钓竿。')
+    await this.staffSay('zhoushu', '^树枝去树底下捡，或者摇摇树，凑够了就到工作台按 E。')
+    this.camTarget = null
+  }
+  private async diyTalk() {
+    if (this.have('branch') >= 5) await this.staffSay('zhoushu', '^树枝够了！到工作台按 E，选「简易钓竿」就能做。')
+    else await this.staffSay('zhoushu', `去树底下捡树枝，或者摇摇树，凑够 5 根就能做简易钓竿了。（现在 ${this.have('branch')} 根）`)
+  }
+  // 拿生物给周叔看：一次一只，看完接着问
+  private async giveTalk() {
+    for (;;) {
+      const given = state.prog?.given ?? []
+      const seen = new Set<string>()
+      const list: { slot: number, id: string, name: string }[] = []
+      state.me.inv.forEach((x, i) => {
+        if (!x || !ITEMS[x.id]?.critter || given.includes(x.id) || seen.has(x.id)) return
+        seen.add(x.id); list.push({ slot: i, id: x.id, name: ITEMS[x.id].name })
+      })
+      if (!list.length) {
+        await this.staffSay('zhoushu', given.length
+          ? `还差 ${CRITTERS_FOR_CURATOR - given.length} 种。钓过的、我看过的就不用再拿来啦。`
+          : '河里、海里能看到鱼影，草丛和花上有虫子。拿着钓竿或捕虫网按空格就行！')
+        return
+      }
+      const opts = [...list.slice(0, 5).map(x => x.name), '算了']
+      const i = await this.staffAsk('zhoushu', '哪一只给我看看？', opts, opts.length - 1)
+      const pick = list[i]
+      if (!pick) return
+      this.g.net.send({ t: 'give', slot: pick.slot })
+      await this.waitMsg('prog')
+      const n = state.prog?.given.length ?? 0
+      const reward = CRITTER_REWARDS.find(([k]) => k === n)
+      if (n >= CRITTERS_FOR_CURATOR) {
+        await this.staffSay('zhoushu', `^${pick.name}！……好了，这下岛上的生物我心里大概有数了！`)
+        await this.staffSay('zhoushu', '我有个老朋友，对这些东西特别着迷。我这就写信请他来岛上看看，明天应该就到了！')
+        return
+      }
+      const react = [`^哦，是${pick.name}！真是稀奇……`, `^${pick.name}啊！原来岛上也有这个……`, `^这就是${pick.name}吗！我记下了……`][n % 3]
+      await this.staffSay('zhoushu', `${react}还差 ${CRITTERS_FOR_CURATOR - n} 种。`)
+      if (reward) {
+        await this.staffSay('zhoushu', `作为谢礼，教你「${RECIPES[reward[1]].name}」的做法吧！`)
+        this.g.hud.toast(`学会了「${RECIPES[reward[1]].name}」的做法`)
+      }
+    }
+  }
+  private async billTalk() {
+    const p = state.prog!
+    const opts = [`用里程付（${MOVE_BILL.miles.toLocaleString()}）`, `用铃钱付（${MOVE_BILL.bells.toLocaleString()}）`, '再等等']
+    const i = await this.staffAsk('zhoushu', `移居费是 ${MOVE_BILL.bells.toLocaleString()} 铃钱，或者 ${MOVE_BILL.miles.toLocaleString()} 里程。现在付吗？`, opts, 2)
+    if (i === 0 && p.miles < MOVE_BILL.miles) { await this.staffSay('zhoushu', `里程还差 ${(MOVE_BILL.miles - p.miles).toLocaleString()}……拔拔草、捡捡贝壳、钓钓鱼，很快就攒够了。`); return }
+    if (i === 1 && state.me.coins < MOVE_BILL.bells) { await this.staffSay('zhoushu', '铃钱好像还不够……不急不急，用里程付也行的。'); return }
+    if (i > 1) return
+    this.g.net.send({ t: 'payBill', with: i === 0 ? 'miles' : 'bells' })
+    await this.waitMsg('prog')
+    if (state.prog?.bill.paid) await this.staffSay('zhoushu', '^付清啦！辛苦了。以后想换个更好的住处，也可以来找我商量。')
+  }
+
   private talkVillager(a: Actor) {
     const pub = state.isle!
     const v = pub.villagers.find(x => x.id === a.id)
@@ -408,7 +561,8 @@ export class IsleScene implements Scene {
         this.g.hud.toast(`拿到了「${VILLAGERS[v.id].name}的帐篷」`)
       } else if (v.tent && (pub.stage === 'neighbors' || pub.stage === 'branches' || pub.stage === 'fruit')) await this.villagerSay(v.id, lines.done)
       else if (pub.stage === 'party' || pub.stage === 'sleep') await this.villagerSay(v.id, lines.party)
-      else await this.villagerSay(v.id, lines.hello)
+      else if (DAY0.includes(pub.stage)) await this.villagerSay(v.id, lines.hello)
+      else { const d = DAILY_LINES[VILLAGERS[v.id].personality]; await this.villagerSay(v.id, d[Math.floor(hash2(state.day, v.id.length, 5) * d.length)]) }
     })
   }
 
@@ -468,13 +622,15 @@ export class IsleScene implements Scene {
       const d = Math.hypot(x - hx, y - hy)
       if (d <= r) out.push({ text, act, prio, d })
     }
-    for (const d of pub.drops) consider(d.x, d.y - 4, 18, 3, `<b>E</b> 捡起${ITEMS[d.item]?.name ?? d.item}`, () => this.g.net.send({ t: 'pickup', drop: d.id }))
+    for (const d of pub.drops) consider(d.x, d.y - 4, 18, 3, d.item === 'weeds' ? '<b>E</b> 拔草' : `<b>E</b> 捡起${ITEMS[d.item]?.name ?? d.item}`, () => this.g.net.send({ t: 'pickup', drop: d.id }))
     for (const [id, e] of this.objs) {
       if (pub.removed.includes(id) || !e.root.visible) continue
       const o = e.o
       if (o.kind === 'branch') consider(o.x, o.y - 4, 18, 3, '<b>E</b> 捡起树枝', () => this.g.net.send({ t: 'pickup', obj: o.id }))
+      else if (o.kind === 'weed') consider(o.x, o.y - 4, 18, 3, '<b>E</b> 拔草', () => this.g.net.send({ t: 'pickup', obj: o.id }))
       else if (o.kind === 'tree' || o.kind === 'fruit_tree') consider(o.x, o.y - 6, REACH, 1, '<b>E</b> 摇树', () => this.shake(o))
     }
+    if (state.prog?.recipes.length) consider(this.bench.x, this.bench.y - 6, REACH + 8, 2, '<b>E</b> 用工作台', () => this.ui.openCraft())
     for (const a of this.actors) consider(a.x, a.y - 8, REACH + 4, 2, `<b>E</b> 和${a.name}说话`, () => 'staff' in a.kind ? this.talkStaff(a) : this.talkVillager(a))
     if (pub.tent) {
       const dx = (pub.tent.tx + 0.5) * TILE, dy = (pub.tent.ty + 1) * TILE
@@ -491,6 +647,74 @@ export class IsleScene implements Scene {
     if (e) { const t0 = performance.now(); const x0 = o.x; const w = () => { const k = (performance.now() - t0) / 380; e.root.x = x0 + Math.sin(k * 30) * 2 * (1 - k); if (k < 1) requestAnimationFrame(w); else e.root.x = x0 }; w() }
     for (let i = 0; i < 8; i++) this.fx.spawn({ x: o.x + (Math.random() - 0.5) * 30, y: o.y - 40 - Math.random() * 14, vx: (Math.random() - 0.5) * 30, vy: 10 + Math.random() * 20, ay: 60, life: 0.8, color: [0x7cc45c, 0x9bd86e, 0x5aa84a][i % 3] })
     this.g.net.send({ t: 'shake', obj: o.id })
+  }
+  // 面前够得着的东西（树、石头）
+  private inFront(kinds: (k: string) => boolean): IsleObj | null {
+    const me = this.me, pub = state.isle!
+    const f: Record<Dir, [number, number]> = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] }
+    const [fdx, fdy] = f[me.dir]
+    const hx = me.x + fdx * 12, hy = me.y - 4 + fdy * 12
+    let best: IsleObj | null = null, bd = REACH
+    for (const [id, e] of this.objs) {
+      if (pub.removed.includes(id) || !kinds(e.o.kind)) continue
+      const d = Math.hypot(e.o.x - hx, e.o.y - 6 - hy)
+      if (d < bd) { bd = d; best = e.o }
+    }
+    return best
+  }
+  private wobble(o: IsleObj, amp = 2) {
+    const e = this.objs.get(o.id)
+    if (!e) return
+    const t0 = performance.now(), x0 = o.x
+    const w = () => { const k = (performance.now() - t0) / 300; e.root.x = x0 + Math.sin(k * 30) * amp * (1 - k); if (k < 1) requestAnimationFrame(w); else e.root.x = x0 }
+    w()
+  }
+  // 选中工具按空格 / 左键：返回 true 表示这一下被工具用掉了
+  private useTool(): boolean {
+    const it = selectedItem()
+    const kind = it ? ITEMS[it.id]?.tool : undefined
+    if (!it || !kind || !['rod', 'net', 'axe', 'shovel', 'can'].includes(kind)) return false
+    const { net, audio, assets, hud } = this.g
+    const me = this.me
+    const slot = state.me.selected
+    if (kind === 'rod') {
+      if (this.wild.fishing()) {
+        const got = this.wild.reel()
+        if (got) net.send({ t: 'catch', kind: 'fish', id: got.id, slot })
+      } else if (!this.wild.cast(me, me.dir)) hud.toast('要面朝水面抛竿')
+      return true
+    }
+    if (this.toolCd > 0) return true
+    this.toolCd = 0.42
+    me.act(it.id, assets.icons_hd[ITEMS[it.id].icon])
+    if (kind === 'net') {
+      const b = this.wild.swingNet(me, me.dir)
+      if (b) net.send({ t: 'catch', kind: 'bug', id: b.id, slot })
+    } else if (kind === 'axe' || kind === 'shovel') {
+      const tree = kind === 'axe' ? this.inFront(k => k === 'tree' || k === 'fruit_tree' || k.startsWith('palm')) : null
+      const rock = tree ? null : this.inFront(k => k === 'rock')
+      const o = tree ?? rock
+      setTimeout(() => {
+        if (!o) { audio.play('whoosh', 0.25, 1.4); return }
+        if (tree) {
+          audio.play('chop', 0.6, 0.9 + Math.random() * 0.2)
+          this.wobble(o, 1.5)
+          for (let i = 0; i < 6; i++) this.fx.spawn({ x: o.x + (me.x < o.x ? -6 : 6), y: o.y - 10, vx: (Math.random() - 0.5) * 60, vy: -30 - Math.random() * 30, ay: 160, life: 0.5, color: [0xc89a62, 0xa8794a][i % 2], w: 2, h: 2 })
+          net.send({ t: 'tool', kind: 'chop', obj: o.id, slot })
+        } else {
+          audio.play('shoot', 0.55, 0.8 + Math.random() * 0.2)
+          this.wobble(o, 1)
+          for (let i = 0; i < 5; i++) this.fx.spawn({ x: o.x + (Math.random() - 0.5) * 14, y: o.y - 12, vx: (Math.random() - 0.5) * 70, vy: -40 - Math.random() * 30, ay: 180, life: 0.4, color: 0xfff2c0, w: 1.5, h: 1.5 })
+          net.send({ t: 'tool', kind: 'rock', obj: o.id, slot })
+        }
+      }, 140)
+    } else if (kind === 'can') {
+      audio.play('water', 0.4)
+      const f: Record<Dir, [number, number]> = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] }
+      const [dx, dy] = f[me.dir]
+      for (let i = 0; i < 10; i++) this.fx.spawn({ x: me.x + dx * 14, y: me.y - 14 + dy * 10, vx: dx * 30 + (Math.random() - 0.5) * 16, vy: 10 + Math.random() * 20, ay: 120, life: 0.5, color: 0x9fdcff, w: 1.5, h: 1.5 })
+    }
+    return true
   }
   private enterTent() {
     if (this.g.switching) return
@@ -531,10 +755,12 @@ export class IsleScene implements Scene {
       if (input.hit('i', 'tab')) hud.toggleInventory()
     }
     let moving = false
-    const ax = this.busy || hud.dialogOpen() ? { x: 0, y: 0 } : input.axis()
+    const ax = this.busy || hud.dialogOpen() || hud.modalOpen() ? { x: 0, y: 0 } : input.axis()
+    this.sneak = input.down('shift')
     if (!this.g.switching && (ax.x || ax.y)) {
       const len = Math.hypot(ax.x, ax.y)
-      const vx = (ax.x / len) * SPEED * dt, vy = (ax.y / len) * SPEED * dt
+      const sp = SPEED * (this.sneak ? 0.42 : 1)
+      const vx = (ax.x / len) * sp * dt, vy = (ax.y / len) * sp * dt
       if (vx) this.slide(vx, 0)
       if (vy) this.slide(0, vy)
       me.dir = dirOf(ax)
@@ -543,12 +769,21 @@ export class IsleScene implements Scene {
     me.moving = moving
     this.unstick()
 
+    // 钓到 / 抓到的弹窗：按一下关掉
+    const press = !input.typing() && (input.hit(' ') || input.clicked)
+    let used = false
+    if (this.ui.catchOpen() && (press || input.hit('e'))) { this.ui.hideCatch(); used = true }
     // 放帐篷
     const ghost = this.drawGhost()
-    if (ghost && !this.busy && !input.typing() && (input.hit(' ') || input.clicked)) {
+    if (!used && ghost && !this.busy && press) {
+      used = true
       if (ghost.why) hud.toast(ghost.why)
       else { net.send({ t: 'place', slot: state.me.selected, tx: ghost.spot.tx, ty: ghost.spot.ty }); audio.play('plant', 0.5) }
     }
+    // 用工具（换了别的东西拿在手上就收线）
+    this.toolCd -= dt
+    if (this.wild.fishing() && ITEMS[selectedItem()?.id ?? '']?.tool !== 'rod') this.wild.reel()
+    if (!used && !ghost && !this.busy && press) used = this.useTool()
     // E：最近的互动
     const near = this.busy || this.g.switching ? null : this.nearest()
     hud.hint(this.busy || hud.modalOpen() ? null : ghost ? (ghost.why ? `放不了：${ghost.why}` : '<b>空格</b> 在这里搭帐篷') : near?.text ?? null)
@@ -556,11 +791,20 @@ export class IsleScene implements Scene {
 
     if (moving) {
       this.stepT -= dt
-      if (this.stepT <= 0) { this.stepT = 0.32; audio.play('step_grass', 0.16) }
+      if (this.stepT <= 0) { this.stepT = this.sneak ? 0.5 : 0.32; audio.play('step_grass', this.sneak ? 0.06 : 0.16) }
     }
 
     // ── 实体 ──
     me.update(dt)
+    // 钓鱼时竿一直拿在手上，竿梢指着浮漂
+    if (this.wild.fishing() && me.actT <= 0) {
+      const tex = this.g.assets.icons_hd.icon_flimsy_rod
+      if (tex) { me.tool.texture = tex; me.tool.visible = true }
+      const side = this.wild.bobber.x < me.x - 4 ? -1 : 1
+      me.tool.scale.set(side, 1)
+      me.tool.rotation = side * (me.dir === 'up' ? 0.1 : 0.6)
+      me.tool.position.set(side * 6, -12)
+    } else if (!this.wild.fishing() && me.actT <= 0) me.tool.visible = false
     for (const a of this.actors) a.update(dt)
     for (const f of this.others.values()) {
       const k = 1 - Math.exp(-dt * 12)
@@ -581,8 +825,10 @@ export class IsleScene implements Scene {
     this.clampCamera()
 
     // ── 光照：第 0 天的钟点是游戏定的（白天下午，欢迎会以后是晚上），之后跟现实走 ──
-    const hour = pub.stage === 'day1' ? state.hour : this.party || pub.stage === 'party' || pub.stage === 'sleep' ? 20.6 : 14.5
-    const rain = pub.stage === 'day1' && state.rain ? 1 : 0
+    const realTime = !DAY0.includes(pub.stage) && !NIGHT0.includes(pub.stage) && !this.party
+    const hour = realTime ? state.hour : this.party || NIGHT0.includes(pub.stage) ? 20.6 : 14.5
+    const rain = realTime && state.rain ? 1 : 0
+    this.wild.update(dt, time, { x: me.x, y: me.y, moving, sneak: this.sneak }, calendarOf(state.day).month, hour, !!rain)
     const [r, gg, b, gain, sat] = sky(hour)
     v.post.set('uAmbient', [r * (rain ? 0.78 : 1), gg * (rain ? 0.78 : 1), b * (rain ? 0.86 : 1)])
     v.post.set('uLightGain', gain + rain * 0.25)
@@ -599,7 +845,6 @@ export class IsleScene implements Scene {
       const p = v.worldToScreen(f.x, f.y - (f.held.visible ? 58 : 38))
       f.tag.position.set(Math.round(p.x), Math.round(p.y))
     }
-    if (this.lastStage === 'branches' || this.lastStage === 'fruit' || this.lastStage === 'neighbors') this.renderTracker()
 
     // 位置同步
     this.sendT -= dt
@@ -616,6 +861,8 @@ export class IsleScene implements Scene {
 
   destroy() {
     for (const u of this.unsub) u()
+    this.wild.destroy()
+    this.ui.destroy()
     this.fx.clear()
     this.g.app.stage.removeChild(this.view.display, this.overlay)
     this.overlay.destroy({ children: true })

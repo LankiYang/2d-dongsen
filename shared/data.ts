@@ -2,20 +2,21 @@
 import { FURNITURE } from './furniture.ts'
 import { hash2 } from './noise.ts'
 import { VILLAGERS, VILLAGER_IDS } from './villagers.ts'
+import { FISHES, BUGS } from './critters.ts'
 
 export const TILE = 24               // 岛屿地块边长（美术像素）
 // ── 世界时钟（动森方向：游戏时间就是现实时间，北京时间）──
-// clock 是从「第 1 天早上 6 点」（世界纪元 epoch）起算的毫秒数，每天 6:00 换日、结算作物。
+// clock 是从「第 1 天凌晨 5 点」（世界纪元 epoch）起算的毫秒数，每天 5:00 换日（原作就是凌晨 5 点换日：树枝、杂草、贝壳、钱石都在这时候刷新）。
 // 星露谷方向是 10 分钟一天、自己的历法（4 季 × 28 天）；这个分支改成现实的日子、现实的星期和月份
 export const DAY_MS = 24 * 60 * 60 * 1000
-export const DAY_START_HOUR = 6
+export const DAY_START_HOUR = 5
 export const TZ_MS = 8 * 60 * 60 * 1000   // 北京时间 UTC+8
 
 let worldEpoch = 0
-// epoch：第 1 天早上 6 点（北京时间）的时间戳。服务端启动时设，客户端收到 welcome 时设
+// epoch：第 1 天凌晨 5 点（北京时间）的时间戳。服务端启动时设，客户端收到 welcome 时设
 export function setWorldEpoch(ms: number) { worldEpoch = ms }
-// 某个时刻之前最近的一个北京时间早上 6 点
-export function sixAm(ms: number) { return Math.floor((ms + TZ_MS - DAY_START_HOUR * 3600000) / DAY_MS) * DAY_MS + DAY_START_HOUR * 3600000 - TZ_MS }
+// 某个时刻之前最近的一次换日（北京时间凌晨 5 点）
+export function dayStartAt(ms: number) { return Math.floor((ms + TZ_MS - DAY_START_HOUR * 3600000) / DAY_MS) * DAY_MS + DAY_START_HOUR * 3600000 - TZ_MS }
 
 // 历法：现实的年月日、星期（weekday 0 = 周一）、按北半球月份分季节（3～5 月春、6～8 月夏、9～11 月秋、12～2 月冬）
 export const SEASON_NAMES = ['春', '夏', '秋', '冬'] as const
@@ -23,7 +24,7 @@ export const WEEKDAY_NAMES = ['一', '二', '三', '四', '五', '六', '日'] a
 export const SEASON_FIRST_MONTH = [3, 6, 9, 12] as const
 export function calendarOf(day: number) {
   // 取那天北京时间中午，避开换日边界
-  const local = worldEpoch + (day - 1) * DAY_MS + 6 * 3600000 + TZ_MS
+  const local = worldEpoch + (day - 1) * DAY_MS + (12 - DAY_START_HOUR) * 3600000 + TZ_MS
   const d = new Date(local)
   const month = d.getUTCMonth() + 1
   const localDays = Math.floor(local / DAY_MS)            // 1970-01-01（星期四）起的天数
@@ -35,9 +36,9 @@ export function calendarOf(day: number) {
   }
 }
 export function dayOf(clock: number) { return Math.floor(clock / DAY_MS) + 1 }
-export function hourOf(clock: number) { return DAY_START_HOUR + ((clock % DAY_MS) / DAY_MS) * 24 } // 6.0 ~ 30.0（24 以后是第二天凌晨）
+export function hourOf(clock: number) { return DAY_START_HOUR + ((clock % DAY_MS) / DAY_MS) * 24 } // 5.0 ~ 29.0（24 以后是第二天凌晨）
 
-// ── 天气：大约三成的日子会下雨，只下其中一段（2～6 个钟点，6 点到 22 点之间开始）──
+// ── 天气：大约三成的日子会下雨，只下其中一段（2～6 个钟点，5 点到 21 点之间开始）──
 // 下雨的时候田地自动浇透（服务端在雨开始时浇），村民的去处、对话也跟着变
 export function rainWindow(day: number): [number, number] | null {
   if (day <= 1 || hash2(day, 3, 7) >= 0.3) return null   // 第一天必定晴
@@ -58,7 +59,8 @@ export interface ItemDef {
   atlas?: 'icons' | 'sea' | 'furniture' | 'icons_hd'
   price?: number        // 卖价
   buy?: number          // 在鱼摊能买到的价格
-  tool?: 'hoe' | 'can' | 'harpoon'
+  tool?: 'hoe' | 'can' | 'harpoon' | 'rod' | 'net' | 'axe' | 'shovel'
+  critter?: 'fish' | 'bug'  // 鱼、虫（能捐博物馆、交给周叔研究）
   seedOf?: CropId
   furniture?: boolean   // 家具（只在家具目录卖）
   quest?: boolean       // 剧情物品：不能卖、不能送礼，交给对的人
@@ -184,6 +186,34 @@ Object.assign(ITEMS, {
   kit_tent: { name: '帐篷', icon: 'icon_tent', atlas: 'icons_hd', quest: true },
   cot: { name: '折叠床', icon: 'icon_cot', atlas: 'icons_hd', quest: true },
 } satisfies Record<string, ItemDef>)
+// 材料、贝壳、简易工具、漂流瓶（价格照原作）
+Object.assign(ITEMS, {
+  wood: { name: '木材', icon: 'icon_wood', atlas: 'icons_hd', price: 60, stack: true },
+  softwood: { name: '软木材', icon: 'icon_softwood', atlas: 'icons_hd', price: 60, stack: true },
+  hardwood: { name: '硬木材', icon: 'icon_hardwood', atlas: 'icons_hd', price: 60, stack: true },
+  stone: { name: '石块', icon: 'icon_stone', atlas: 'icons_hd', price: 75, stack: true },
+  clay: { name: '黏土', icon: 'icon_clay', atlas: 'icons_hd', price: 100, stack: true },
+  iron_nugget: { name: '铁矿石', icon: 'icon_iron', atlas: 'icons_hd', price: 375, stack: true },
+  gold_nugget: { name: '金矿石', icon: 'icon_gold', atlas: 'icons_hd', price: 10000, stack: true },
+  weeds: { name: '杂草', icon: 'icon_weeds', atlas: 'icons_hd', price: 10, stack: true },
+  bottle: { name: '漂流瓶', icon: 'icon_bottle', atlas: 'icons_hd', quest: true },
+  shell_sand_dollar: { name: '海胆壳', icon: 'icon_sand_dollar', atlas: 'icons_hd', price: 120, stack: true },
+  shell_cowrie: { name: '宝贝螺', icon: 'icon_cowrie', atlas: 'icons_hd', price: 60, stack: true },
+  shell_giant_clam: { name: '砗磲', icon: 'icon_giant_clam', atlas: 'icons_hd', price: 120, stack: true },
+  shell_coral: { name: '珊瑚', icon: 'icon_coral', atlas: 'icons_hd', price: 500, stack: true },
+  shell_sea_snail: { name: '海螺', icon: 'icon_sea_snail', atlas: 'icons_hd', price: 180, stack: true },
+  shell_venus_comb: { name: '骨螺', icon: 'icon_venus_comb', atlas: 'icons_hd', price: 150, stack: true },
+  shell_conch: { name: '凤尾螺', icon: 'icon_conch', atlas: 'icons_hd', price: 700, stack: true },
+  shell_summer: { name: '夏日贝壳', icon: 'icon_summer_shell', atlas: 'icons_hd', price: 600, stack: true },
+  flimsy_rod: { name: '简易钓竿', icon: 'icon_flimsy_rod', atlas: 'icons_hd', tool: 'rod', price: 100 },
+  flimsy_net: { name: '简易捕虫网', icon: 'icon_flimsy_net', atlas: 'icons_hd', tool: 'net', price: 100 },
+  flimsy_axe: { name: '简易斧头', icon: 'icon_flimsy_axe', atlas: 'icons_hd', tool: 'axe', price: 50 },
+  flimsy_shovel: { name: '简易铲子', icon: 'icon_flimsy_shovel', atlas: 'icons_hd', tool: 'shovel', price: 50 },
+  flimsy_can: { name: '简易洒水壶', icon: 'icon_flimsy_can', atlas: 'icons_hd', tool: 'can', price: 50 },
+  campfire: { name: '篝火', icon: 'icon_campfire', atlas: 'icons_hd', price: 240 },
+} satisfies Record<string, ItemDef>)
+for (const x of FISHES) ITEMS[`fsh_${x.id}`] = { name: x.name, icon: x.icon, atlas: 'icons_hd', price: x.price, critter: 'fish' }
+for (const x of BUGS) ITEMS[`bug_${x.id}`] = { name: x.name, icon: x.icon, atlas: 'icons_hd', price: x.price, critter: 'bug' }
 // 每位村民的帐篷包（第 0 天帮他们选位置用）
 for (const id of VILLAGER_IDS) ITEMS[`kit_vtent_${id}`] = { name: `${VILLAGERS[id].name}的帐篷`, icon: 'icon_tent', atlas: 'icons_hd', quest: true }
 for (const [id, f] of Object.entries(FISH)) {

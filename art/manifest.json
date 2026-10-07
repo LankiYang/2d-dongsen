@@ -1342,6 +1342,25 @@
         38,
         38
       ]
+    },
+    {
+      "raw": "i2_props",
+      "names": [
+        "workbench",
+        "drop_bottle",
+        null,
+        null,
+        "bobber",
+        null
+      ],
+      "heights": [
+        30,
+        12,
+        30,
+        20,
+        7,
+        30
+      ]
     }
   ],
   "icons_hd": [
@@ -1375,7 +1394,7 @@
     {
       "raw": "i1_props",
       "names": [
-        null,
+        "icon_campfire",
         null,
         null,
         null,
@@ -1420,6 +1439,212 @@
         40,
         40,
         40
+      ]
+    },
+    {
+      "raw": "i2_materials",
+      "names": [
+        "icon_wood",
+        "icon_softwood",
+        "icon_hardwood",
+        "icon_stone",
+        "icon_clay",
+        "icon_iron",
+        "icon_gold",
+        "icon_weeds",
+        "icon_bottle",
+        "icon_recipe"
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "raw": "i2_tools",
+      "names": [
+        "icon_flimsy_rod",
+        "icon_flimsy_net",
+        "icon_flimsy_axe",
+        "icon_flimsy_shovel",
+        "icon_flimsy_can",
+        null,
+        null,
+        null,
+        null,
+        "icon_bobber"
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "raw": "i2_shells",
+      "names": [
+        "icon_sand_dollar",
+        "icon_cowrie",
+        "icon_giant_clam",
+        "icon_coral",
+        "icon_sea_snail",
+        "icon_venus_comb",
+        "icon_conch",
+        "icon_summer_shell"
+      ],
+      "heights": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ]
+    },
+    {
+      "raw": "i2_fish_a",
+      "names": [
+        "fsh_sea_bass",
+        "fsh_horse_mackerel",
+        "fsh_red_snapper",
+        "fsh_olive_flounder",
+        "fsh_dab",
+        "fsh_anchovy",
+        "fsh_zebra_turkeyfish",
+        "fsh_barred_knifejaw",
+        "fsh_squid",
+        "fsh_puffer_fish",
+        "fsh_ocean_sunfish"
+      ],
+      "heights": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ]
+    },
+    {
+      "raw": "i2_fish_b",
+      "names": [
+        "fsh_crucian_carp",
+        "fsh_dace",
+        "fsh_carp",
+        "fsh_pale_chub",
+        "fsh_goldfish",
+        "fsh_catfish",
+        "fsh_black_bass",
+        "fsh_freshwater_goby",
+        "fsh_mitten_crab",
+        "fsh_yellow_perch",
+        "fsh_bluegill"
+      ],
+      "heights": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ]
+    },
+    {
+      "raw": "i2_bugs_a",
+      "names": [
+        "bug_common_butterfly",
+        "bug_yellow_butterfly",
+        "bug_tiger_butterfly",
+        "bug_monarch_butterfly",
+        "bug_moth",
+        "bug_honeybee",
+        "bug_red_dragonfly",
+        "bug_common_dragonfly",
+        "bug_darner_dragonfly"
+      ],
+      "heights": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ]
+    },
+    {
+      "raw": "i2_bugs_b",
+      "names": [
+        "bug_rice_grasshopper",
+        "bug_migratory_locust",
+        "bug_cricket",
+        "bug_bell_cricket",
+        "bug_mantis",
+        "bug_ladybug",
+        "bug_stinkbug",
+        "bug_hermit_crab",
+        "bug_tiger_beetle",
+        null
+      ],
+      "heights": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ]
+    },
+    {
+      "raw": "i2_apps",
+      "names": [
+        "app_miles",
+        "app_diy",
+        "app_pedia",
+        "app_map",
+        "app_passport",
+        "app_chat"
+      ],
+      "heights": [
+        24,
+        24,
+        24,
+        24,
+        24,
+        24
       ]
     }
   ]

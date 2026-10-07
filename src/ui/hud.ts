@@ -11,6 +11,7 @@ import type { GameAssets } from '../core/assets.ts'
 import type { Audio } from '../core/audio.ts'
 import { state } from '../state.ts'
 import { STAGES } from '../../shared/restore.ts'
+import { TOOL_USES } from '../../shared/diy.ts'
 import type { Req } from '../../shared/restore.ts'
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T
@@ -93,6 +94,8 @@ export class Hud {
     if (slot) {
       el.appendChild(this.icon(slot.id))
       if (slot.n > 1) { const n = document.createElement('span'); n.className = 'n'; n.textContent = String(slot.n); el.appendChild(n) }
+      // 会用坏的工具：底下一条耐久
+      if (slot.d !== undefined && TOOL_USES[slot.id]) { const b = document.createElement('span'); b.className = 'dur'; const k = slot.d / TOOL_USES[slot.id]; b.innerHTML = `<i style="width:${Math.round(k * 100)}%;background:${k > 0.5 ? '#7cc95e' : k > 0.2 ? '#f0b440' : '#e0583a'}"></i>`; el.appendChild(b) }
       el.onmouseenter = () => this.showTip(el, slot)
       el.onmouseleave = () => this.tooltip.classList.add('hidden')
     }
@@ -105,7 +108,7 @@ export class Hud {
     if (!def) return
     const r = el.getBoundingClientRect()
     const name = def.tool === 'harpoon' ? HARPOONS[state.gear.harpoon].name : def.name
-    this.tooltip.textContent = name + (def.price ? `  ·  卖 ${def.price}` : def.quest ? '  ·  重要物品' : '') + (def.food ? `  ·  吃掉体力 +${def.food}` : '')
+    this.tooltip.textContent = name + (slot.d !== undefined && TOOL_USES[slot.id] ? `  ·  还能用 ${slot.d} 次` : '') + (def.price ? `  ·  卖 ${def.price}` : def.quest ? '  ·  重要物品' : '') + (def.food ? `  ·  吃掉体力 +${def.food}` : '')
     this.tooltip.style.left = `${r.left}px`
     this.tooltip.style.top = `${r.top - 44}px`
     this.tooltip.classList.remove('hidden')
@@ -190,10 +193,10 @@ export class Hud {
       this.dialog({ ...o, options: [], onOption: () => {}, onDone: () => { this.dlgResolve = null; res() } })
     })
   }
-  // 剧情用：提问，返回选了第几个（对话框被关掉就当选了第一项）
-  ask(o: { name: string, title: string, face: string, voice: number, text: string }, options: string[]): Promise<number> {
+  // 剧情用：提问，返回选了第几个（对话框被关掉就当选了 cancel 那一项，默认第一项）
+  ask(o: { name: string, title: string, face: string, voice: number, text: string }, options: string[], cancel = 0): Promise<number> {
     return new Promise(res => {
-      this.dlgResolve = () => res(0)
+      this.dlgResolve = () => res(cancel)
       this.dialog({ ...o, options: options.map(label => ({ label })), onOption: i => { this.dlgResolve = null; res(i) } })
     })
   }

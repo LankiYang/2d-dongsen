@@ -13,9 +13,10 @@ export type SceneId = 'island' | 'sea' | 'restaurant' | `map:${string}` | `home:
 
 // ── 动森式的岛（2D动森，还原原作的流程）──
 // 序章第 0 天的阶段：登岛 → 说明会 → 搭自己的帐篷 → 帮两位村民选位置 → 捡树枝 → 摘水果 → 篝火会起岛名 → 睡觉 → 第 1 天
-export type IsleStage = 'arrive' | 'tent' | 'neighbors' | 'branches' | 'fruit' | 'party' | 'sleep' | 'day1'
+// 第 1 天：周叔给手机、开账单 → DIY 教室（5 根树枝做钓竿）→ 研究岛上的生物（交 5 只）→ 馆长要来（第 2 天）
+export type IsleStage = 'arrive' | 'tent' | 'neighbors' | 'branches' | 'fruit' | 'party' | 'sleep' | 'day1' | 'diy' | 'critters' | 'curator'
 export interface TentSpot { tx: number, ty: number }        // 帐篷占地的底边中间那一格
-export interface IsleDrop { id: number, item: ItemId, x: number, y: number }   // 地上的东西（摇下来的水果、树枝）
+export interface IsleDrop { id: number, item: ItemId, x: number, y: number, look?: string }   // 地上的东西（水果、树枝、贝壳、杂草、材料）；look = 用哪张图
 export interface IslePublic {
   id: number
   owner: number
@@ -29,10 +30,23 @@ export interface IslePublic {
   fruitTaken: Record<number, number>   // 果树 id → 哪天摘的（3 天后再结果）
   drops: IsleDrop[]
   hemi: 'N' | 'S'
+  moneyRock: number            // 今天的钱石是哪块
+}
+
+// 玩家自己的进度（2D动森）：里程、手机、配方、图鉴、统计、成就、账单
+export interface ProgPublic {
+  miles: number
+  phone: boolean
+  recipes: string[]
+  pedia: { fish: string[], bugs: string[] }
+  stats: Record<string, number>
+  achieved: Record<string, number>     // 成就 id → 已经拿到第几档（从 1 数）
+  bill: { paid: boolean }
+  given: string[]                      // 交给周叔研究过的生物
 }
 export type Dir = 'down' | 'up' | 'left' | 'right'
 
-export interface Slot { id: ItemId, n: number }
+export interface Slot { id: ItemId, n: number, d?: number }   // d：工具还能用几次
 
 export interface PlayerPublic {
   id: number
@@ -92,6 +106,12 @@ export type ClientMsg =
   | { t: 'shake', obj: number }                         // 摇树
   | { t: 'place', slot: number, tx: number, ty: number } // 把背包里的帐篷包放下
   | { t: 'prologue', step: string, name?: string }      // 序章推进（说明会听完、交树枝、交水果、给岛起名、睡觉……），服务端校验
+  | { t: 'tool', kind: 'chop' | 'rock', obj: number, slot: number }   // 斧头砍树 / 敲石头（斧头、铲子都行）
+  | { t: 'craft', recipe: string }                      // 在工作台做东西
+  | { t: 'catch', kind: 'fish' | 'bug', id: string, slot: number }    // 钓到鱼 / 抓到虫（服务端校验季节、钟点、地点、工具）
+  | { t: 'give', slot: number }                         // 把生物交给周叔研究
+  | { t: 'isleShop', op: 'buy', item: string, n: number } | { t: 'isleShop', op: 'sell', slot: number, all: boolean }
+  | { t: 'payBill', with: 'miles' | 'bells' }
   | { t: 'move', x: number, y: number, dir: Dir, moving: boolean }
   | { t: 'act', kind: 'till' | 'water' | 'plant' | 'harvest', tx: number, ty: number, slot?: number }
   | { t: 'scene', to: SceneId }
@@ -124,9 +144,12 @@ export type ClientMsg =
   | { t: 'eat', slot: number }                          // 吃掉背包里的作物回体力
 
 export type ServerMsg =
-  | { t: 'welcome', you: number, token: string, coins: number, inv: (Slot | null)[], plots: Record<string, PlotState>, clock: number, day: number, epoch: number, players: PlayerPublic[], scene: SceneId, x: number, y: number, houses: HouseInfo[], lot: number | null, gear: Gear, isle?: IslePublic, miles?: number, name?: string, hue?: number }
+  | { t: 'welcome', you: number, token: string, coins: number, inv: (Slot | null)[], plots: Record<string, PlotState>, clock: number, day: number, epoch: number, players: PlayerPublic[], scene: SceneId, x: number, y: number, houses: HouseInfo[], lot: number | null, gear: Gear, isle?: IslePublic, prog?: ProgPublic, name?: string, hue?: number }
   | { t: 'checkin' }                                    // 新玩家：先去机场柜台办手续
   | { t: 'isle', isle: IslePublic }                     // 岛的状态变了（帐篷、捡东西、阶段……）
+  | { t: 'prog', prog: ProgPublic }                     // 自己的进度变了
+  | { t: 'miles', name: string, miles: number }         // 拿到里程（成就）
+  | { t: 'got', kind: 'fish' | 'bug', id: string, kept: boolean }       // 钓到 / 抓到了（kept=false：口袋满了放走了）
   | { t: 'players', list: PlayerPublic[] }
   | { t: 'fish', list: FishPublic[] }
   | { t: 'plot', key: string, plot: PlotState | null }

@@ -19,6 +19,8 @@ const SFX = {
   chat: ['tick_001'],
   boom: ['bong_001'],
   whoosh: ['maximize_003'],
+  chop: ['impactWood_light_000'],
+  toggle: ['toggle_001'],
 } as const
 export type SfxName = keyof typeof SFX
 

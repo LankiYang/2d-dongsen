@@ -121,6 +121,7 @@ async function boot() {
     // 2D动森：回到自己的岛（或者帐篷里）
     if (m.isle) {
       state.isle = m.isle
+      state.prog = m.prog ?? null
       hud.showHud(true)
       if (!game.scene) game.start(m.scene)
       else game.switchTo(m.scene)

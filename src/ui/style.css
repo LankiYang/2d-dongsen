@@ -495,3 +495,93 @@ body.isle #clock .energy { display: none; }
 .prompt-box { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); padding: 18px 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; z-index: 30;
   background: #fbf5e2; border-radius: 22px; box-shadow: 0 0 0 4px #efe0b8, 0 10px 30px rgba(60, 40, 20, 0.25); color: #6b5238; }
 .prompt-box .pt { font-size: 18px; color: #e0892e; }
+
+/* ── 第 1 天：手机、工作台、小摊、钓到的弹窗 ── */
+/* 快捷栏上的工具耐久 */
+.slot .dur { position: absolute; left: 8px; right: 8px; bottom: 5px; height: 5px; border-radius: 3px; background: rgba(107, 82, 56, 0.25); overflow: hidden; }
+.slot .dur i { display: block; height: 100%; border-radius: 3px; }
+.slot .pr { position: absolute; left: 3px; top: 1px; font-size: 12px; color: #b07a2a; }
+#tracker .tsub { font-size: 13px; color: #9a7a58; margin-top: 4px; }
+
+/* 手机按钮 */
+.phone-btn { position: fixed; left: 20px; top: 64px; width: 64px; height: 64px; border: 0; border-radius: 20px; display: flex; align-items: center; justify-content: center;
+  background: #fbf5e2; box-shadow: 0 0 0 3px #efe0b8, 0 4px 0 3px rgba(120, 96, 60, 0.25); cursor: pointer; transition: transform .12s; }
+.phone-btn:hover { transform: translateY(-2px) rotate(-4deg); }
+
+/* 手机本体 */
+.phone-modal { background: rgba(20, 40, 50, 0.35); }
+.phone { width: 400px; height: min(680px, 94vh); border-radius: 46px; padding: 16px; background: #f6efe0; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 10px #e9a24b, 0 0 0 13px #c97d2e, 0 18px 40px rgba(40, 25, 10, 0.4); color: #6b5238; font-size: 16px; animation: ph-in .22s ease-out; }
+@keyframes ph-in { from { transform: translateY(40px) scale(.96); opacity: 0; } }
+.ph-top { display: flex; justify-content: space-between; padding: 2px 14px 8px; font-size: 14px; color: #9a7a58; }
+.ph-body { flex: 1; display: flex; flex-direction: column; min-height: 0; border-radius: 30px; background: linear-gradient(#fffdf6, #f8f0dc); padding: 14px; overflow: hidden; }
+.ph-brand { text-align: center; font-size: 18px; color: #e0892e; margin: 4px 0 18px; }
+.ph-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 10px; }
+.ph-app { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; font-size: 14px; color: #6b5238; cursor: pointer; transition: transform .1s; }
+.ph-app:hover { transform: scale(1.06); }
+.ph-app .ico { filter: drop-shadow(0 3px 0 rgba(120, 96, 60, 0.18)); }
+.ph-foot { margin-top: auto; text-align: center; font-size: 15px; color: #9a7a58; }
+.ph-foot b { color: #3fa27a; font-size: 20px; }
+.ph-head { display: flex; align-items: center; gap: 10px; font-size: 19px; color: #e0892e; margin-bottom: 10px; }
+.ph-back { border: 0; background: #efe0b8; color: #8c6f4c; width: 34px; height: 34px; border-radius: 50%; font-size: 24px; line-height: 1; cursor: pointer; }
+.ph-page { flex: 1; overflow-y: auto; min-height: 0; padding-right: 4px; }
+.ph-empty { color: #b09a7c; text-align: center; padding: 30px 0; }
+.ph-note { font-size: 12px; color: #b09a7c; margin-top: 10px; text-align: center; }
+/* 里程 */
+.mi-total { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 14px; border-radius: 16px; background: #dff3e6; color: #3c7d5e; }
+.mi-total b { font-size: 28px; }
+.mi-bill { font-size: 13px; margin: 8px 2px; color: #c0703a; }
+.mi-bill.ok { color: #3fa27a; }
+.mi-row { padding: 8px 10px; border-radius: 12px; margin-top: 6px; background: #fff; box-shadow: 0 0 0 2px #f1e6c6; }
+.mi-row.done { background: #f2fbf3; }
+.mi-name { display: flex; justify-content: space-between; font-size: 15px; }
+.mi-name span { color: #f0b440; letter-spacing: 1px; }
+.mi-bar { height: 7px; border-radius: 4px; background: #efe0b8; margin: 5px 0 3px; overflow: hidden; }
+.mi-bar i { display: block; height: 100%; background: #7cc95e; border-radius: 4px; }
+.mi-sub { font-size: 12px; color: #9a7a58; }
+/* DIY 配方（手机里、工作台共用） */
+.dy-row, .cr-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: #fff; box-shadow: 0 0 0 2px #f1e6c6; margin-bottom: 8px; position: relative; }
+.dy-row > .ico, .cr-row > .ico { flex: none; width: 56px; display: flex; justify-content: center; }
+.dy-info { flex: 1; min-width: 0; }
+.dy-name { font-size: 17px; }
+.dy-name small { font-size: 12px; color: #b09a7c; margin-left: 8px; }
+.dy-mats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.dy-mat { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; padding: 1px 8px 1px 3px; border-radius: 999px; background: #f1f8ea; color: #4f8a3c; }
+.dy-mat.miss { background: #fdecea; color: #c0503a; }
+/* 图鉴 */
+.pd-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.pd-tabs .tab { font-size: 15px; padding: 3px 16px; cursor: pointer; }
+.pd-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.pd-cell { position: relative; height: 58px; border: 0; border-radius: 12px; background: #fff; box-shadow: 0 0 0 2px #f1e6c6; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.pd-cell.unk .ico { filter: brightness(0) opacity(0.18); }
+.pd-cell.now::after { content: ''; position: absolute; right: 5px; top: 5px; width: 7px; height: 7px; border-radius: 50%; background: #6cc24a; }
+.pd-detail { margin-top: 10px; min-height: 44px; font-size: 13px; line-height: 1.5; padding: 6px 10px; border-radius: 12px; background: #fff7e2; }
+.pd-detail b { font-size: 16px; color: #e0892e; }
+/* 地图、护照 */
+.mp-canvas { width: 100%; image-rendering: pixelated; border-radius: 16px; box-shadow: 0 0 0 3px #efe0b8; }
+.pp-card { border-radius: 20px; padding: 18px 20px; background: linear-gradient(135deg, #fff6dc, #ffe9c2); box-shadow: 0 0 0 3px #f2d6a0; }
+.pp-name { font-size: 26px; color: #e0892e; margin-bottom: 10px; }
+.pp-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 2px dashed #f2d6a0; font-size: 15px; }
+.pp-row span { color: #b09a7c; }
+
+/* 工作台 */
+.craft-panel { width: 560px; max-height: 80vh; display: flex; flex-direction: column; }
+.cr-list { overflow-y: auto; padding: 4px; }
+.cr-row.off { opacity: .6; }
+.cr-row .btn { font-size: 18px; padding: 4px 18px; }
+.cr-prog { position: absolute; left: 76px; right: 110px; bottom: 6px; height: 6px; border-radius: 3px; background: #efe0b8; overflow: hidden; }
+.cr-prog i { display: block; height: 100%; width: 0; background: #f0a040; }
+
+/* 阿海的小摊 */
+.sh-coins { font-size: 18px; color: #b07a2a; margin-left: auto; margin-right: 18px; }
+
+/* 钓到 / 抓到 */
+.catch-pop { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; z-index: 20;
+  padding: 18px 34px 16px; border-radius: 26px; background: rgba(255, 253, 244, 0.96); box-shadow: 0 0 0 4px #efe0b8, 0 10px 30px rgba(60, 40, 20, 0.25); animation: cp-in .32s cubic-bezier(.2, 1.6, .4, 1); }
+.catch-pop.out { opacity: 0; transform: translate(-50%, -50%) scale(.9); transition: all .22s; }
+@keyframes cp-in { from { transform: translate(-50%, -30%) scale(.6); opacity: 0; } }
+.cp-title { font-size: 26px; color: #6b5238; }
+.cp-sub { font-size: 15px; color: #9a7a58; }
+.cp-sub.new { color: #fff; background: #f0a040; padding: 2px 12px; border-radius: 999px; }
+.toast.miles { display: flex; align-items: center; gap: 8px; background: #e6f7ec; color: #2f7a55; box-shadow: 0 0 0 3px #9fd8b4; border-radius: 999px; }
+.toast.miles b { color: #1f9a62; }

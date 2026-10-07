@@ -30,7 +30,7 @@ export class Game {
       state.me.inv = m.inv
       hud.renderHotbar()
       hud.refreshPanels()
-      if (m.coins > before) hud.toast(`+${m.coins - before} 金币`)
+      if (m.coins > before) hud.toast(`+${m.coins - before} 铃钱`)
     })
     net.on('plot', m => { if (m.plot) state.plots.set(m.key, m.plot); else state.plots.delete(m.key) })
     net.on('plots', m => { state.plots = new Map(Object.entries(m.plots)) })
@@ -42,6 +42,7 @@ export class Game {
     net.on('story', m => { state.story = m; hud.refreshStory() })
     net.on('restore', m => { state.restore = m.state; hud.refreshRestore() })
     net.on('energy', m => { state.energy = m.v; hud.setEnergy(m.v) })
+    net.on('prog', m => { state.prog = m.prog })
     net.on('questDone', m => { hud.toast(`完成「${m.title}」${m.coins ? ` +${m.coins} 金币` : ''}`); audio.play('coin', 0.6) })
     // 出航/传送由服务端批准后再切：同一张图里就地瞬移，否则换场景
     net.on('goto', m => {

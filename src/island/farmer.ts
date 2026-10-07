@@ -59,10 +59,12 @@ export class Farmer {
 
   setHue(hue: number) { this.frames = this.assets.farmers.get(hue) ?? this.assets.chars }
 
-  act(icon: string) {
+  // tex：用别的图集里的工具图（2D动森的高清简易工具）
+  act(icon: string, tex?: Texture) {
     this.actT = 0.32
     this.actIcon = icon
-    this.tool.texture = this.assets.icons[icon] ?? this.assets.icons.hoe
+    this.tool.texture = tex ?? this.assets.icons[icon] ?? this.assets.icons.hoe
+    this.tool.scale.y = tex ? Math.min(1, 22 / Math.max(tex.width, tex.height)) : 1
     this.tool.visible = true
   }
 
@@ -92,7 +94,7 @@ export class Farmer {
       this.tool.rotation = side * (-1.4 + k * 2.4)
       const reach = this.dir === 'up' ? -4 : this.dir === 'down' ? 4 : 8
       this.tool.position.set(this.dir === 'left' || this.dir === 'right' ? side * (4 + k * reach) : 6, -18 + k * 6 + (this.dir === 'down' ? 4 : 0))
-      this.tool.scale.x = side
+      this.tool.scale.x = side * Math.abs(this.tool.scale.y)
       // 挥锄时身体往下一沉 1 像素（整数位移，缩放在像素网格里会逐行闪）
       this.body.y = k > 0.3 && k < 0.8 ? 1 : 0
       if (this.actT <= 0) this.tool.visible = false

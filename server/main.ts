@@ -9,7 +9,7 @@ import { randomBytes } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { WebSocketServer, WebSocket } from 'ws'
 import {
-  TILE, DAY_MS, DAY_START_HOUR, dayOf, calendarOf, isRainy, rainingAt, rainWindow, sixAm, setWorldEpoch, WEEKDAY_NAMES, ENERGY_REGEN_MS, RESTAURANT_GUESTS_PER_DAY, CROPS, cropStage, ITEMS, FISH, INV_SIZE, START_COINS, START_INV,
+  TILE, DAY_MS, DAY_START_HOUR, dayOf, calendarOf, isRainy, rainingAt, rainWindow, dayStartAt, setWorldEpoch, WEEKDAY_NAMES, ENERGY_REGEN_MS, RESTAURANT_GUESTS_PER_DAY, CROPS, cropStage, ITEMS, FISH, INV_SIZE, START_COINS, START_INV,
   SHIRT_HUES, DISHES, QUALITY_MULT, hourOf, restaurantOpen, pickIngredients,
   START_GEAR, TANKS, HARPOONS, BASKETS, ENERGY_MAX, DIVE_ENERGY, PRESSURE_LIMIT_Y, gearDef, gearMax, affordable, SHARKS, SHARK_BITE_RANGE, BITE_INVULN_MS,
 } from '../shared/data.ts'
@@ -34,7 +34,9 @@ import { rng } from '../shared/noise.ts'
 import { World } from '../shared/world/gen.ts'
 import { MAPS } from '../shared/world/maps.ts'
 import { plotKey } from '../shared/protocol.ts'
-import { initIsles } from './isle.ts'
+import { initIsles, loadProg } from './isle.ts'
+import type { Prog } from './isle.ts'
+import { initLife } from './isle-life.ts'
 import type { RelPublic } from '../shared/protocol.ts'
 import type { ClientMsg, ServerMsg, PlayerPublic, PlotState, Slot, SceneId, Dir, FishPublic, HouseInfo, Customer, Holding } from '../shared/protocol.ts'
 
@@ -78,14 +80,22 @@ function assignLot(id: number): number | null {
 const getMeta = (k: string) => (db.prepare('SELECT v FROM meta WHERE k=?').get(k) as { v: string } | undefined)?.v
 const setMeta = (k: string, v: string) => db.prepare('INSERT INTO meta(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v').run(k, v)
 
-// 世界时钟（动森方向：跟现实同步，北京时间）：epochReal = 第 1 天早上 6 点的时间戳，第几天 = 从那天起数。
+// 世界时钟（动森方向：跟现实同步，北京时间）：epochReal = 第 1 天换日那一刻（凌晨 5 点）的时间戳，第几天 = 从那天起数。
 // 新世界从今天算第 1 天；星露谷方向的老世界（10 分钟一天，存的是 epoch）第一次按新规则启动时，
-// 把 epochReal 定在「今天 6 点往前推 (老天数 - 1) 天」，天数接着往下数，作物、委托期限、聊天送礼记录都不会突然跳一大截
+// 把 epochReal 定在「今天换日往前推 (老天数 - 1) 天」，天数接着往下数，作物、委托期限、聊天送礼记录都不会突然跳一大截
 let epoch = Number(getMeta('epochReal'))
 if (!epoch) {
   const oldDay = Number(getMeta('lastDay')) || 1
-  epoch = sixAm(Date.now()) - (oldDay - 1) * DAY_MS
+  epoch = dayStartAt(Date.now()) - (oldDay - 1) * DAY_MS
   setMeta('epochReal', String(epoch))
+  setMeta('dayStart', String(DAY_START_HOUR))
+}
+// 换日钟点改过（以前 6 点，现在照原作 5 点）：纪元跟着挪，天数不变
+const oldStart = Number(getMeta('dayStart') ?? 6)
+if (oldStart !== DAY_START_HOUR) {
+  epoch += (DAY_START_HOUR - oldStart) * 3600000
+  setMeta('epochReal', String(epoch))
+  setMeta('dayStart', String(DAY_START_HOUR))
 }
 setWorldEpoch(epoch)
 // 测试用：--start-hour 把「现在」挪到今天的这个钟点（只影响这次运行；挪动量在 ±12 小时内）
@@ -94,6 +104,8 @@ if (arg('start-hour') !== undefined) {
   const want = Number(arg('start-hour')), cur = DAY_START_HOUR + ((Date.now() - epoch) % DAY_MS) / 3600000
   timeShift = ((((want - cur) % 24) + 36) % 24 - 12) * 3600000
 }
+// 测试用：--day-offset 把「今天」往后挪几天（看换日刷新、隔天的东西）
+if (arg('day-offset') !== undefined) timeShift += Number(arg('day-offset')) * DAY_MS
 const clockNow = () => Date.now() + timeShift - epoch
 
 const plots = new Map<string, PlotState>()
@@ -131,6 +143,7 @@ interface Session {
   story: Story
   dirty: boolean
   isle?: number         // 自己的岛（2D动森）；没有的是潮汐港时期的老存档，登录时先去机场办手续
+  prog?: Prog           // 2D动森的进度：里程、配方、图鉴、成就
   sentEnergy?: number   // 上次推给客户端的体力（体力随时间回，变了才推）
 }
 const sessions = new Set<Session>()
@@ -174,6 +187,7 @@ const pub = (s: Session): PlayerPublic => ({ id: s.id, name: s.name, hue: s.hue,
 function savePlayer(s: Session) {
   db.prepare('UPDATE players SET name=?, hue=?, coins=?, inv=?, scene=?, x=?, y=?, gear=?, story=? WHERE id=?')
     .run(s.name, s.hue, s.coins, JSON.stringify(s.inv), s.scene, s.x, s.y, JSON.stringify(s.gear), JSON.stringify(s.story), s.id)
+  if (s.prog) db.prepare('UPDATE players SET prog=? WHERE id=?').run(JSON.stringify(s.prog), s.id)
   s.dirty = false
 }
 
@@ -690,6 +704,7 @@ function stepRestaurant() {
 // ── 连接处理 ──
 // ── 2D动森：每人一座岛 ──
 const isles = initIsles<Session>({ db, today, sessions, send, addItem, takeItem, sendInv })
+const life = initLife<Session>({ db, today, sessions, send, addItem, takeItem, sendInv, clock: clockNow }, isles)
 
 // 有岛的玩家上线：回到自己的岛（或者帐篷里）
 function helloIsle(ws: WebSocket, row: any): Session {
@@ -703,12 +718,13 @@ function helloIsle(ws: WebSocket, row: any): Session {
     ws, id: row.id, token: row.token, name: row.name, hue: row.hue, coins: row.coins, inv,
     scene, x, y, dir: 'down', moving: false, lastMoveAt: Date.now(), lastHitAt: 0, diveCatch: [], holding: null,
     gear: loadGear(row.gear), invulnUntil: 0, dirty: true, story: loadStory(row.story ?? null, !row.story), isle: row.isle,
+    prog: loadProg(row.prog ?? null),
   }
   sessions.add(s)
   send(s, {
     t: 'welcome', you: s.id, token: s.token, coins: s.coins, inv: s.inv, plots: {},
     clock: clockNow(), day: dayOf(clockNow()), epoch, players: [...sessions].filter(o => o.scene === s.scene).map(pub), scene: s.scene, x: s.x, y: s.y,
-    houses: [], lot: null, gear: s.gear, isle: isles.welcomeIsle(s) ?? undefined, name: s.name, hue: s.hue,
+    houses: [], lot: null, gear: s.gear, isle: isles.welcomeIsle(s) ?? undefined, name: s.name, hue: s.hue, prog: life.progPub(s.prog!),
   })
   return s
 }
@@ -730,7 +746,7 @@ function checkin(ws: WebSocket, m: Extract<ClientMsg, { t: 'checkin' }>, token: 
   const isleId = isles.create(row.id, m.seed, m.hemi === 'S' ? 'S' : 'N', Math.max(0, Math.min(3, m.answer | 0)))
   const a = isles.arrive(isleId)
   // 原作开局身无分文、口袋是空的
-  db.prepare('UPDATE players SET name=?, hue=?, coins=0, inv=?, scene=?, x=?, y=?, lot=NULL, story=NULL, isle=?, birthday=? WHERE id=?')
+  db.prepare('UPDATE players SET name=?, hue=?, coins=0, inv=?, scene=?, x=?, y=?, lot=NULL, story=NULL, prog=NULL, isle=?, birthday=? WHERE id=?')
     .run(name, hue, empty, `isle:${isleId}`, a.x, a.y, isleId, `${bm}-${bd}`, row.id)
   return helloIsle(ws, db.prepare('SELECT * FROM players WHERE id=?').get(row.id))
 }
@@ -828,6 +844,12 @@ function handle(s: Session, m: ClientMsg) {
     case 'shake': isles.shake(s, m.obj); break
     case 'place': isles.place(s, m); break
     case 'prologue': isles.prologue(s, m); break
+    case 'tool': life.tool(s, m); break
+    case 'craft': life.craft(s, m.recipe); break
+    case 'catch': life.catch(s, m); break
+    case 'give': life.give(s, m.slot); break
+    case 'isleShop': life.shop(s, m); break
+    case 'payBill': life.payBill(s, m.with); break
     case 'move': {
       if (!Number.isFinite(m.x) || !Number.isFinite(m.y)) return
       const now = Date.now()
@@ -1342,6 +1364,7 @@ setInterval(() => {
   if (tick % 10 === 0) stepRestaurant() // 2Hz
   if (tick % 100 === 0) { // 5 秒
     processDays()
+    life.tick()
     rainWater()
     fillFish()
     // 体力随时间回：变了就推给客户端
