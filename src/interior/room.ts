@@ -188,12 +188,14 @@ export abstract class RoomScene implements Scene {
   protected tagOffset(f: Farmer) { return f.held.visible ? 58 : 38 }
   protected cleanup() {}
 
+  protected exitScene(): SceneId { return 'island' }               // 出门去哪个场景
   protected exit() {
     if (this.leaving) return
     this.leaving = true
-    this.g.net.send({ t: 'scene', to: 'island' })
+    const to = this.exitScene()
+    this.g.net.send({ t: 'scene', to })
     this.g.meStart = this.exitPos()
-    this.g.switchTo('island')
+    this.g.switchTo(to)
   }
   protected doorHint(): Hint | null {
     const me = this.me

@@ -1,6 +1,7 @@
 // 静态规则数据：物品、作物、鱼种。前后端共用，数值只在这里改。
 import { FURNITURE } from './furniture.ts'
 import { hash2 } from './noise.ts'
+import { VILLAGERS, VILLAGER_IDS } from './villagers.ts'
 
 export const TILE = 24               // 岛屿地块边长（美术像素）
 // ── 世界时钟（动森方向：游戏时间就是现实时间，北京时间）──
@@ -54,7 +55,7 @@ export type ItemId = string
 export interface ItemDef {
   name: string
   icon: string          // icons 图集里的帧名（鱼用 sea 图集）
-  atlas?: 'icons' | 'sea' | 'furniture'
+  atlas?: 'icons' | 'sea' | 'furniture' | 'icons_hd'
   price?: number        // 卖价
   buy?: number          // 在鱼摊能买到的价格
   tool?: 'hoe' | 'can' | 'harpoon'
@@ -170,6 +171,21 @@ export const ITEMS: Record<ItemId, ItemDef> = {
   q_photo: { name: '金枪鱼群的照片', icon: 'q_photo', quest: true },
   q_chronicle: { name: '潮汐港村志', icon: 'q_chronicle', quest: true },
 }
+
+// ── 2D动森：岛上的东西（图标在 icons_hd 高清图集）──
+// 原作的价格：树枝 5，本地水果 100（外地水果 500，卖的时候按岛的特产判断）
+Object.assign(ITEMS, {
+  branch: { name: '树枝', icon: 'icon_branch', atlas: 'icons_hd', price: 5, stack: true },
+  apple: { name: '苹果', icon: 'icon_apple', atlas: 'icons_hd', price: 100, stack: true },
+  orange: { name: '橘子', icon: 'icon_orange', atlas: 'icons_hd', price: 100, stack: true },
+  pear: { name: '梨', icon: 'icon_pear', atlas: 'icons_hd', price: 100, stack: true },
+  peach: { name: '桃子', icon: 'icon_peach', atlas: 'icons_hd', price: 100, stack: true },
+  cherry: { name: '樱桃', icon: 'icon_cherry', atlas: 'icons_hd', price: 100, stack: true },
+  kit_tent: { name: '帐篷', icon: 'icon_tent', atlas: 'icons_hd', quest: true },
+  cot: { name: '折叠床', icon: 'icon_cot', atlas: 'icons_hd', quest: true },
+} satisfies Record<string, ItemDef>)
+// 每位村民的帐篷包（第 0 天帮他们选位置用）
+for (const id of VILLAGER_IDS) ITEMS[`kit_vtent_${id}`] = { name: `${VILLAGERS[id].name}的帐篷`, icon: 'icon_tent', atlas: 'icons_hd', quest: true }
 for (const [id, f] of Object.entries(FISH)) {
   ITEMS[`fish_${id}`] = { name: f.name, icon: f.sprite, atlas: 'sea', price: f.price, stack: true }
 }

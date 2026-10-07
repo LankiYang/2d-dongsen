@@ -8,7 +8,28 @@ import type { RestoreState } from './restore.ts'
 // 和某位村民的关系（发给客户端的摘要）
 export interface RelPublic { pts: number, talked: boolean, gifted: boolean, gw: number }
 
-export type SceneId = 'island' | 'sea' | 'restaurant' | `map:${string}` | `home:${number}`   // map:<地图id> = shared/world 生成的地图
+// isle:<岛号> = 动森式的岛（每人一座）；tent:<玩家号> = 玩家的帐篷里面
+export type SceneId = 'island' | 'sea' | 'restaurant' | `map:${string}` | `home:${number}` | `isle:${number}` | `tent:${number}`   // map:<地图id> = shared/world 生成的地图
+
+// ── 动森式的岛（2D动森，还原原作的流程）──
+// 序章第 0 天的阶段：登岛 → 说明会 → 搭自己的帐篷 → 帮两位村民选位置 → 捡树枝 → 摘水果 → 篝火会起岛名 → 睡觉 → 第 1 天
+export type IsleStage = 'arrive' | 'tent' | 'neighbors' | 'branches' | 'fruit' | 'party' | 'sleep' | 'day1'
+export interface TentSpot { tx: number, ty: number }        // 帐篷占地的底边中间那一格
+export interface IsleDrop { id: number, item: ItemId, x: number, y: number }   // 地上的东西（摇下来的水果、树枝）
+export interface IslePublic {
+  id: number
+  owner: number
+  ownerName: string
+  seed: number
+  name: string                 // 岛名（篝火会上起，之前是空的）
+  stage: IsleStage
+  tent: TentSpot | null        // 岛主的帐篷
+  villagers: { id: string, tent: TentSpot | null }[]
+  removed: number[]            // 被帐篷压掉、被捡走的地图物件 id
+  fruitTaken: Record<number, number>   // 果树 id → 哪天摘的（3 天后再结果）
+  drops: IsleDrop[]
+  hemi: 'N' | 'S'
+}
 export type Dir = 'down' | 'up' | 'left' | 'right'
 
 export interface Slot { id: ItemId, n: number }
@@ -65,6 +86,12 @@ export interface FishPublic {
 
 export type ClientMsg =
   | { t: 'hello', token: string, name: string, hue: number }
+  // 机场柜台办移居手续：名字、生日、外观、半球、挑中的岛（种子）、「带什么去荒岛」的回答
+  | { t: 'checkin', name: string, hue: number, birthday: [number, number], hemi: 'N' | 'S', seed: number, answer: number }
+  | { t: 'pickup', obj?: number, drop?: number }        // 捡起地图上的东西（树枝）或者地上掉的东西
+  | { t: 'shake', obj: number }                         // 摇树
+  | { t: 'place', slot: number, tx: number, ty: number } // 把背包里的帐篷包放下
+  | { t: 'prologue', step: string, name?: string }      // 序章推进（说明会听完、交树枝、交水果、给岛起名、睡觉……），服务端校验
   | { t: 'move', x: number, y: number, dir: Dir, moving: boolean }
   | { t: 'act', kind: 'till' | 'water' | 'plant' | 'harvest', tx: number, ty: number, slot?: number }
   | { t: 'scene', to: SceneId }
@@ -97,7 +124,9 @@ export type ClientMsg =
   | { t: 'eat', slot: number }                          // 吃掉背包里的作物回体力
 
 export type ServerMsg =
-  | { t: 'welcome', you: number, token: string, coins: number, inv: (Slot | null)[], plots: Record<string, PlotState>, clock: number, day: number, epoch: number, players: PlayerPublic[], scene: SceneId, x: number, y: number, houses: HouseInfo[], lot: number | null, gear: Gear }
+  | { t: 'welcome', you: number, token: string, coins: number, inv: (Slot | null)[], plots: Record<string, PlotState>, clock: number, day: number, epoch: number, players: PlayerPublic[], scene: SceneId, x: number, y: number, houses: HouseInfo[], lot: number | null, gear: Gear, isle?: IslePublic, miles?: number, name?: string, hue?: number }
+  | { t: 'checkin' }                                    // 新玩家：先去机场柜台办手续
+  | { t: 'isle', isle: IslePublic }                     // 岛的状态变了（帐篷、捡东西、阶段……）
   | { t: 'players', list: PlayerPublic[] }
   | { t: 'fish', list: FishPublic[] }
   | { t: 'plot', key: string, plot: PlotState | null }

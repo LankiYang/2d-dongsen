@@ -74,6 +74,8 @@ export class Hud {
     const el = document.createElement('div')
     el.className = 'ico'
     if (!f) return el
+    // 高清图集：按比例平滑缩放到格子里
+    if (atlas === 'icons_hd') { cssSprite(el, meta, f, (box * 0.72) / Math.max(f.w, f.h)); el.classList.add('hd'); return el }
     // 能整数放大就整数放大（像素不变形）；大鱼缩小到格子里
     const s = Math.min(3, box / Math.max(f.w, f.h))
     const sc = s >= 1 ? Math.max(1, Math.floor(s)) : s
@@ -205,9 +207,17 @@ export class Hud {
     const f = meta.frames[`${o.face}_${happy ? 1 : 0}`]?.frame
     const face = $('dlg-face')
     const sc = window.innerHeight >= 900 ? 3 : 2
-    face.style.display = f ? '' : 'none'
-    if (!f) $('dialog').style.setProperty('--face-w', '0px')
-    if (f) {
+    // 动物村民（v:<id>）：立绘是 icons_hd 里的高清立像
+    const vf = o.face.startsWith('v:') ? this.assets.atlasMeta.icons_hd.frames[`face_${o.face.slice(2)}`]?.frame : undefined
+    face.style.display = f || vf ? '' : 'none'
+    if (!f && !vf) $('dialog').style.setProperty('--face-w', '0px')
+    if (vf) {
+      const k = (window.innerHeight >= 900 ? 190 : 140) / vf.h
+      face.style.transform = 'none'
+      cssSprite(face, this.assets.atlasMeta.icons_hd, vf, k)
+      $('dialog').style.setProperty('--face-w', `${Math.round(vf.w * k) + 12}px`)
+    } else if (f) {
+      face.style.backgroundSize = ''
       face.style.width = `${f.w}px`; face.style.height = `${f.h}px`
       face.style.background = `url(/assets/${meta.image}) -${f.x}px -${f.y}px`
       face.style.setProperty('--face-scale', `scale(${sc})`)
@@ -256,6 +266,21 @@ export class Hud {
       if (i < text.length) { i = text.length; finish() }
       else if (o.onDone && !o.options.length) { this.dropDlgKey(); this.audio.play('click', 0.25); o.onDone() }
     }
+  }
+  // 输入一行字（给岛起名）：回车或点确定
+  prompt(title: string, initial = '', max = 8): Promise<string> {
+    return new Promise(resolve => {
+      const box = document.createElement('div')
+      box.className = 'prompt-box panel'
+      box.innerHTML = `<div class="pt">${title}</div><input maxlength="${max}" /><button class="btn">确定</button>`
+      document.getElementById('ui')!.appendChild(box)
+      const input = box.querySelector('input')!
+      input.value = initial
+      setTimeout(() => input.focus(), 30)
+      const done = () => { const v = input.value.trim(); if (!v) return; box.remove(); this.audio.play('click', 0.4); resolve(v) }
+      box.querySelector('button')!.onclick = done
+      input.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') done() }
+    })
   }
   closeDialog() { clearInterval(this.dlgTimer); this.dropDlgKey(); $('dialog').classList.add('hidden'); this.releaseDialog() }
 
@@ -928,9 +953,14 @@ export class Hud {
   }
 
   // ── 登录：标题画面上的「登岛」卡片。选名字和衬衫颜色，角色站在一小块草地上原地走、每隔一会儿转个身 ──
-  login(saved: { name: string, hue: number }): Promise<{ name: string, hue: number }> {
+  login(saved: { name: string, hue: number }, simple = false): Promise<{ name: string, hue: number }> {
     $('loading').classList.add('hidden')
     $('login').classList.remove('hidden')
+    // 2D动森：名字和外观在机场柜台登记，标题卡片上只留「开始」
+    if (simple) {
+      $('login').classList.add('simple')
+      $('login-go').textContent = saved.name ? '继续' : '开始'
+    }
     const nameIn = $<HTMLInputElement>('login-name')
     nameIn.value = saved.name
     let hue = saved.hue
@@ -985,6 +1015,7 @@ export class Hud {
   }
 
 
+  showHud(on: boolean) { $('hud').classList.toggle('hidden', !on) }
   setLoading(p: number) { ($('loading').querySelector('.bar i') as HTMLElement).style.width = `${Math.round(p * 100)}%` }
 }
 
@@ -999,4 +1030,12 @@ function touchHint(html: string) {
     .replace(/<b>C<\/b>\s*家具目录/g, '「目录」按钮：家具目录')
     .replace(/\s*·\s*<b>Shift\+E<\/b>\s*收起/g, '')
     .replace(/<b>E<\/b>/g, '<b class="ka">互动</b>')
+}
+
+// 高清图集里的一帧做 CSS 背景，按 k 倍缩放（背景图整张跟着缩）
+function cssSprite(el: HTMLElement, meta: { image: string, size?: { w: number, h: number } }, f: { x: number, y: number, w: number, h: number }, k: number) {
+  const sw = meta.size?.w ?? 4096, sh = meta.size?.h ?? 4096
+  el.style.width = `${Math.round(f.w * k)}px`
+  el.style.height = `${Math.round(f.h * k)}px`
+  el.style.background = `url(/assets/${meta.image}) -${f.x * k}px -${f.y * k}px / ${sw * k}px ${sh * k}px no-repeat`
 }

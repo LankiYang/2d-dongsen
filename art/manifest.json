@@ -1222,6 +1222,205 @@
       "heights": [
         100
       ]
+    },
+    {
+      "raw": "i1_airport",
+      "names": [
+        "airport"
+      ],
+      "heights": [
+        150
+      ]
+    },
+    {
+      "raw": "i1_tents",
+      "names": [
+        "rs_tent",
+        "tent_orange",
+        "tent_blue"
+      ],
+      "heights": [
+        104,
+        56,
+        56
+      ]
+    },
+    {
+      "raw": "i1_props",
+      "names": [
+        "campfire",
+        "seaplane",
+        "signpost",
+        "board",
+        "cot",
+        "crate"
+      ],
+      "heights": [
+        36,
+        64,
+        40,
+        34,
+        24,
+        30
+      ]
+    },
+    {
+      "raw": "i1_fruit_trees",
+      "names": [
+        "tree_apple",
+        "tree_orange",
+        "tree_pear",
+        "tree_peach",
+        null,
+        "tree_cherry",
+        "tree_fruitless"
+      ],
+      "heights": [
+        64,
+        58,
+        58,
+        58,
+        58,
+        58,
+        58
+      ]
+    },
+    {
+      "raw": "i1_items",
+      "names": [
+        "drop_branch",
+        "drop_apple",
+        "drop_orange",
+        "drop_pear",
+        "drop_peach",
+        "drop_cherry",
+        null,
+        null,
+        null,
+        null
+      ],
+      "heights": [
+        12,
+        13,
+        13,
+        14,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13
+      ]
+    },
+    {
+      "raw": "i1_villagers",
+      "names": [
+        "v_dog",
+        "v_bear",
+        "v_gator",
+        "v_duck",
+        "v_bunny",
+        "v_cat_yellow",
+        "v_bunny2",
+        "v_squirrel",
+        "v_bear_green",
+        "v_squirrel_purple",
+        "v_deer",
+        "v_cat"
+      ],
+      "heights": [
+        38,
+        38,
+        38,
+        38,
+        38,
+        38,
+        38,
+        38,
+        38,
+        38,
+        38,
+        38
+      ]
+    }
+  ],
+  "icons_hd": [
+    {
+      "raw": "i1_items",
+      "names": [
+        "icon_branch",
+        "icon_apple",
+        "icon_orange",
+        "icon_pear",
+        "icon_peach",
+        "icon_cherry",
+        "icon_tent",
+        "icon_map",
+        "icon_phone",
+        "icon_bells"
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16
+      ]
+    },
+    {
+      "raw": "i1_props",
+      "names": [
+        null,
+        null,
+        null,
+        null,
+        "icon_cot",
+        null
+      ],
+      "heights": [
+        16,
+        16,
+        16,
+        16,
+        12,
+        16
+      ]
+    },
+    {
+      "raw": "i1_villagers",
+      "names": [
+        "face_v_dog",
+        "face_v_bear",
+        "face_v_gator",
+        "face_v_duck",
+        "face_v_bunny",
+        "face_v_cat_yellow",
+        "face_v_bunny2",
+        "face_v_squirrel",
+        "face_v_bear_green",
+        "face_v_squirrel_purple",
+        "face_v_deer",
+        "face_v_cat"
+      ],
+      "heights": [
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ]
     }
   ]
 }

@@ -22,7 +22,8 @@ export interface GameAssets {
   cone: Texture
   soil: { dry: Texture[], wet: Texture[] }  // 下标 = 四邻接掩码（上1 右2 下4 左8）
   shadow: (w: number) => Texture
-  atlasMeta: Record<string, { image: string, frames: Record<string, { frame: { x: number, y: number, w: number, h: number } }> }>
+  atlasMeta: Record<string, { image: string, size?: { w: number, h: number }, frames: Record<string, { frame: { x: number, y: number, w: number, h: number } }> }>
+  icons_hd: Atlas
   bgReef: Texture
   bgDeep: Texture
 }
@@ -236,11 +237,12 @@ async function loadBackdrop(url: string): Promise<Texture> {
 }
 
 export async function loadAssets(onProgress: (p: number) => void): Promise<GameAssets> {
-  const names = ['island', 'crops', 'sea', 'icons', 'chars', 'npcs', 'portraits', 'decor', 'interior', 'furniture'] as const
+  const names = ['island', 'crops', 'sea', 'icons', 'chars', 'npcs', 'portraits', 'decor', 'interior', 'furniture', 'icons_hd'] as const
   const loaded: Record<string, { atlas: Atlas, meta: any }> = {}
   let done = 0
   await Promise.all(names.map(async n => { loaded[n] = await loadSheet(n); onProgress(++done / (names.length + 3)) }))
   if (HD) await Promise.all(HD_ATLASES.map(n => loadHD(n, loaded[n].atlas)))
+  { const src = Object.values(loaded.icons_hd.atlas)[0]?.source; if (src) src.scaleMode = 'linear' }
   const farmers = await recolorFarmers(loaded.chars.meta)
   onProgress(++done / (names.length + 3))
   const [bgReef, bgDeep] = await Promise.all([loadBackdrop('/assets/bg_reef.png'), loadBackdrop('/assets/bg_deep.png')])
@@ -252,7 +254,8 @@ export async function loadAssets(onProgress: (p: number) => void): Promise<GameA
     cone: makeCone(),
     soil: { dry: makeSoil(false), wet: makeSoil(true) },
     shadow: makeShadow,
-    atlasMeta: Object.fromEntries(names.map(n => [n, { image: loaded[n].meta.meta.image, frames: loaded[n].meta.frames }])),
+    icons_hd: loaded.icons_hd.atlas,
+    atlasMeta: Object.fromEntries(names.map(n => [n, { image: loaded[n].meta.meta.image, size: loaded[n].meta.meta.size, frames: loaded[n].meta.frames }])),
     bgReef, bgDeep,
   }
 }

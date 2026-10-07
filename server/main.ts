@@ -34,6 +34,7 @@ import { rng } from '../shared/noise.ts'
 import { World } from '../shared/world/gen.ts'
 import { MAPS } from '../shared/world/maps.ts'
 import { plotKey } from '../shared/protocol.ts'
+import { initIsles } from './isle.ts'
 import type { RelPublic } from '../shared/protocol.ts'
 import type { ClientMsg, ServerMsg, PlayerPublic, PlotState, Slot, SceneId, Dir, FishPublic, HouseInfo, Customer, Holding } from '../shared/protocol.ts'
 
@@ -129,6 +130,7 @@ interface Session {
   invulnUntil: number   // 被鲨鱼咬过之后的无敌截止时间
   story: Story
   dirty: boolean
+  isle?: number         // 自己的岛（2D动森）；没有的是潮汐港时期的老存档，登录时先去机场办手续
   sentEnergy?: number   // 上次推给客户端的体力（体力随时间回，变了才推）
 }
 const sessions = new Set<Session>()
@@ -686,7 +688,63 @@ function stepRestaurant() {
 }
 
 // ── 连接处理 ──
-function hello(ws: WebSocket, m: Extract<ClientMsg, { t: 'hello' }>): Session {
+// ── 2D动森：每人一座岛 ──
+const isles = initIsles<Session>({ db, today, sessions, send, addItem, takeItem, sendInv })
+
+// 有岛的玩家上线：回到自己的岛（或者帐篷里）
+function helloIsle(ws: WebSocket, row: any): Session {
+  for (const other of sessions) if (other.id === row.id) { other.ws.close(4000, 'replaced'); sessions.delete(other) }
+  const inv = JSON.parse(row.inv) as (Slot | null)[]
+  while (inv.length < INV_SIZE) inv.push(null)
+  let scene = String(row.scene ?? '') as SceneId
+  let x = row.x, y = row.y
+  if (!scene.startsWith('isle:') && !scene.startsWith('tent:')) { scene = `isle:${row.isle}`; const a = isles.arrive(row.isle); x = a.x; y = a.y }
+  const s: Session = {
+    ws, id: row.id, token: row.token, name: row.name, hue: row.hue, coins: row.coins, inv,
+    scene, x, y, dir: 'down', moving: false, lastMoveAt: Date.now(), lastHitAt: 0, diveCatch: [], holding: null,
+    gear: loadGear(row.gear), invulnUntil: 0, dirty: true, story: loadStory(row.story ?? null, !row.story), isle: row.isle,
+  }
+  sessions.add(s)
+  send(s, {
+    t: 'welcome', you: s.id, token: s.token, coins: s.coins, inv: s.inv, plots: {},
+    clock: clockNow(), day: dayOf(clockNow()), epoch, players: [...sessions].filter(o => o.scene === s.scene).map(pub), scene: s.scene, x: s.x, y: s.y,
+    houses: [], lot: null, gear: s.gear, isle: isles.welcomeIsle(s) ?? undefined, name: s.name, hue: s.hue,
+  })
+  return s
+}
+
+// 机场柜台办移居手续：建档 + 建岛。新玩家、潮汐港时期的老存档都从这里开始
+function checkin(ws: WebSocket, m: Extract<ClientMsg, { t: 'checkin' }>, token: string): Session | null {
+  const name = String(m.name ?? '').replace(/[\s<>]/g, '').slice(0, 10)
+  const [bm, bd] = Array.isArray(m.birthday) ? m.birthday.map(Number) : [0, 0]
+  if (!name || !(bm >= 1 && bm <= 12) || !(bd >= 1 && bd <= 31) || !Number.isInteger(m.seed) || m.seed < 1 || m.seed > 2 ** 31) return null
+  const hue = SHIRT_HUES.includes(m.hue) ? m.hue : SHIRT_HUES[0]
+  let row = token ? db.prepare('SELECT * FROM players WHERE token=?').get(token) as any : undefined
+  if (row?.isle) return helloIsle(ws, row)
+  const empty = JSON.stringify(Array(INV_SIZE).fill(null))
+  if (!row) {
+    const tk = randomBytes(16).toString('hex')
+    db.prepare('INSERT INTO players(token,name,hue,coins,inv,scene,x,y) VALUES(?,?,?,?,?,?,?,?)').run(tk, name, hue, 0, empty, '', 0, 0)
+    row = db.prepare('SELECT * FROM players WHERE token=?').get(tk)
+  }
+  const isleId = isles.create(row.id, m.seed, m.hemi === 'S' ? 'S' : 'N', Math.max(0, Math.min(3, m.answer | 0)))
+  const a = isles.arrive(isleId)
+  // 原作开局身无分文、口袋是空的
+  db.prepare('UPDATE players SET name=?, hue=?, coins=0, inv=?, scene=?, x=?, y=?, lot=NULL, story=NULL, isle=?, birthday=? WHERE id=?')
+    .run(name, hue, empty, `isle:${isleId}`, a.x, a.y, isleId, `${bm}-${bd}`, row.id)
+  return helloIsle(ws, db.prepare('SELECT * FROM players WHERE id=?').get(row.id))
+}
+
+function hello(ws: WebSocket, m: Extract<ClientMsg, { t: 'hello' }>): Session | null {
+  const known = m.token ? db.prepare('SELECT * FROM players WHERE token=?').get(m.token) as any : undefined
+  if (known?.isle) return helloIsle(ws, known)
+  // 还没有岛：先去机场柜台办手续
+  ws.send(JSON.stringify({ t: 'checkin' } satisfies ServerMsg))
+  return null
+}
+
+// 潮汐港时期的登录（留着，2D动森的流程不再走到这里）
+function helloTidehaven(ws: WebSocket, m: Extract<ClientMsg, { t: 'hello' }>): Session {
   const name = String(m.name || '潜水员').slice(0, 12)
   const hue = SHIRT_HUES.includes(m.hue) ? m.hue : SHIRT_HUES[0]
   let row = m.token ? db.prepare('SELECT * FROM players WHERE token=?').get(m.token) as any : undefined
@@ -766,6 +824,10 @@ const onDock = (s: Session) => s.scene === 'island' && s.x / TILE >= PLACES.dock
 
 function handle(s: Session, m: ClientMsg) {
   switch (m.t) {
+    case 'pickup': isles.pickup(s, m); break
+    case 'shake': isles.shake(s, m.obj); break
+    case 'place': isles.place(s, m); break
+    case 'prologue': isles.prologue(s, m); break
     case 'move': {
       if (!Number.isFinite(m.x) || !Number.isFinite(m.y)) return
       const now = Date.now()
@@ -775,7 +837,9 @@ function handle(s: Session, m: ClientMsg) {
       if (d > maxStep) { // 超速：按最大步长截断
         s.x += ((m.x - s.x) / d) * maxStep; s.y += ((m.y - s.y) / d) * maxStep
       } else { s.x = m.x; s.y = m.y }
-      if (s.scene === 'island') {
+      if (isles.clamp(s)) {
+        // 2D动森的岛 / 帐篷
+      } else if (s.scene === 'island') {
         s.x = Math.max(0, Math.min(ISLAND_W * TILE, s.x)); s.y = Math.max(0, Math.min(ISLAND_H * TILE, s.y))
       } else if (s.scene === 'sea') {
         s.y = Math.min(s.y, depthLimit(s))
@@ -794,6 +858,7 @@ function handle(s: Session, m: ClientMsg) {
     case 'act': handleAct(s, m); break
     case 'scene': {
       if (m.to === s.scene) return
+      if (isles.sceneChange(s, m.to)) break
       if (m.to === 'sea') {
         const ds = PLACES.diveSpot
         if (s.scene !== 'island' || !(s.x / TILE >= ds.x0 - 1 && s.x / TILE <= ds.x1 + 1 && s.y / TILE >= ds.y0 - 1.5 && s.y / TILE <= ds.y1 + 1.5)) return
@@ -1241,10 +1306,15 @@ const http = createServer((req, res) => {
 const wss = new WebSocketServer({ server: http, path: '/ws' })
 wss.on('connection', ws => {
   let s: Session | null = null
+  let token = ''
   ws.on('message', raw => {
     let m: ClientMsg
     try { m = JSON.parse(String(raw)) } catch { return }
-    if (!s) { if (m.t === 'hello') s = hello(ws, m); return }
+    if (!s) {
+      if (m.t === 'hello') { token = m.token; s = hello(ws, m) }
+      else if (m.t === 'checkin') s = checkin(ws, m, token)
+      return
+    }
     handle(s, m)
   })
   ws.on('close', () => {

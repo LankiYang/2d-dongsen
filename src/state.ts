@@ -1,5 +1,5 @@
 // 客户端共享状态（服务端下发的权威数据的本地镜像）
-import type { HouseInfo, PlotState, Slot, Holding, ServerMsg } from '../shared/protocol.ts'
+import type { HouseInfo, PlotState, Slot, Holding, ServerMsg, IslePublic } from '../shared/protocol.ts'
 import { dayOf, hourOf, rainingAt, START_GEAR } from '../shared/data.ts'
 import type { Gear } from '../shared/data.ts'
 import type { RestoreState } from '../shared/restore.ts'
@@ -15,6 +15,7 @@ export const state = {
   restore: null as RestoreState | null,                     // 复兴工程的全服进度
   lastEventDay: -1,   // 上一段心事件是哪天看的（每天最多一段，免得两段剧情连着演）
   gear: { ...START_GEAR } as Gear,
+  isle: null as IslePublic | null,   // 自己所在的岛（2D动森）
   energy: 100,        // 体力（服务端下发）
   clockBase: 0,
   clockAt: 0,

@@ -18,6 +18,9 @@ import { SHIRT_HUES, setWorldEpoch } from '../shared/data.ts'
 import { AC_STYLE } from './acstyle.ts'
 import { TitleScene, SHOTS } from './island/title.ts'
 import { TouchControls, isTouchDevice } from './ui/touch.ts'
+import { IsleScene } from './isle/scene.ts'
+import { TentScene } from './isle/tent.ts'
+import { runCheckin } from './ui/checkin.ts'
 
 // 全局最近邻采样：像素画绝不能被插值糊掉（光照图单独指定线性）
 TextureSource.defaultOptions.scaleMode = 'nearest'
@@ -63,6 +66,9 @@ async function boot() {
   game.register('restaurant', () => new RestaurantScene(game))
   for (const l of LOTS) game.register(`home:${l.id}`, () => new HomeScene(game, l.id))
   for (const def of Object.values(MAPS)) game.register(`map:${def.id}`, () => new WorldScene(game, def))
+  // 2D动森：自己的岛、帐篷里面（按编号实例化）
+  game.register('isle:', id => new IsleScene(game, Number(id.slice(5))))
+  game.register('tent:', id => new TentScene(game, Number(id.slice(5))))
   ;(window as any).__tide = {
     game, state,
     // 开发调试：把当前画面存到 art/preview/shots/<name>.png
@@ -82,11 +88,19 @@ async function boot() {
   app.ticker.add(t => game.tick(Math.min(0.05, t.deltaMS / 1000)))
   window.addEventListener('resize', () => { fit(); game.scene?.resize(app.canvas.width, app.canvas.height) })
 
-  const { name, hue } = await hud.login({ name: saved.name ?? '', hue: SHIRT_HUES.includes(saved.hue ?? -1) ? saved.hue! : SHIRT_HUES[0] })
+  let { name, hue } = await hud.login({ name: saved.token ? saved.name ?? '' : '', hue: SHIRT_HUES.includes(saved.hue ?? -1) ? saved.hue! : SHIRT_HUES[0] }, true)
   audio.unlock()
   state.me.name = name
   state.me.hue = hue
-  localStorage.setItem(SAVE_KEY, JSON.stringify({ ...saved, name, hue }))
+
+  // 还没有岛：先去机场柜台办移居手续
+  net.on('checkin', async () => {
+    hud.showHud(false)
+    const r = await runCheckin(hud, assets, audio, { name: saved.name ?? '', hue })
+    name = r.name; hue = r.hue
+    state.me.name = name; state.me.hue = hue
+    net.send({ t: 'checkin', ...r })
+  })
 
   net.on('welcome', m => {
     state.me.id = m.you
@@ -98,10 +112,20 @@ async function boot() {
     state.gear = m.gear ?? state.gear
     setWorldEpoch(m.epoch)
     state.syncClock(m.clock)
+    if (m.name) { name = m.name; state.me.name = name }
+    if (m.hue !== undefined) { hue = m.hue; state.me.hue = hue }
     localStorage.setItem(SAVE_KEY, JSON.stringify({ name, hue, token: m.token }))
     hud.renderHotbar()
     hud.setOffline(false)
     game.meStart = { x: m.x, y: m.y }
+    // 2D动森：回到自己的岛（或者帐篷里）
+    if (m.isle) {
+      state.isle = m.isle
+      hud.showHud(true)
+      if (!game.scene) game.start(m.scene)
+      else game.switchTo(m.scene)
+      return
+    }
     // 断线重连时服务端会把人放回岛上
     if (!game.scene) game.start('island')
     else if (game.sceneId !== 'island') game.switchTo('island')

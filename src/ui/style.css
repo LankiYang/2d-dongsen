@@ -450,3 +450,48 @@ html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent
 .acstyle #help { border-radius: 999px; }
 .acstyle #help { color: #8c6f4c; }
 .acstyle #help b { color: #e0892e; }
+
+/* ── 2D动森 ── */
+/* 标题卡片只留「开始」按钮（名字、外观到机场柜台登记） */
+#login.simple .login-panel { width: auto; grid-template-columns: 1fr; padding: 14px 22px; }
+#login.simple #login-preview, #login.simple .lp-form label, #login.simple .lp-form .label, #login.simple #login-hues, #login.simple .lp-tip { display: none; }
+#login.simple .btn.big { min-width: 220px; margin: 0; }
+/* 岛上没有体力 */
+body.isle #clock .energy { display: none; }
+/* 高清图标：平滑缩放 */
+.ico.hd, .slot .ico.hd { image-rendering: auto; }
+#dlg-face { image-rendering: auto; }
+
+/* 机场柜台 */
+.checkin { position: fixed; inset: 0; background: #bfe6f0 url(/assets/checkin_bg.png) center / cover no-repeat; transition: opacity .7s; }
+.checkin.out { opacity: 0; pointer-events: none; }
+.ck-panel { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); min-width: 380px; padding: 18px 24px; display: flex; flex-direction: column; gap: 12px; align-items: center;
+  background: #fbf5e2; border-radius: 22px; box-shadow: 0 0 0 4px #efe0b8, 0 10px 30px rgba(60, 40, 20, 0.25); color: #6b5238; }
+.ck-panel.hidden { display: none; }
+.ck-panel.wide { min-width: 760px; }
+.ck-title { font-size: 22px; color: #e0892e; }
+.ck-sub { font-size: 13px; color: #9a7a58; margin-top: -6px; }
+.ck-row { display: flex; gap: 18px; align-items: center; }
+.ck-preview { width: 144px; height: 160px; background: #e8f5d8; border-radius: 16px; image-rendering: pixelated; }
+.ck-side { display: flex; flex-direction: column; gap: 8px; min-width: 190px; }
+.ck-side label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.ck-side input, .ck-bday select, .prompt-box input { font: inherit; font-size: 20px; padding: 6px 10px; border-radius: 12px; border: 3px solid #efe0b8; background: #fffdf4; color: #5a4430; outline: none; }
+.ck-bday select { min-width: 110px; }
+.ck-maps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.ck-map { display: flex; flex-direction: column; gap: 6px; align-items: center; padding: 8px; border: 0; border-radius: 16px; background: #fffdf4; box-shadow: 0 0 0 3px #efe0b8; cursor: pointer; transition: transform .12s; }
+.ck-map:hover { transform: translateY(-3px); box-shadow: 0 0 0 3px #8fcf7a; }
+.ck-map canvas { width: 160px; height: 141px; border-radius: 10px; image-rendering: auto; }
+.ck-fruit { font-size: 14px; color: #6b5238; }
+/* 飞过去：天空 + 云 + 水上飞机从左飞到右 */
+.ck-flight { position: absolute; inset: 0; opacity: 0; transition: opacity .6s; overflow: hidden;
+  background: linear-gradient(#8fd3f4 0%, #c9ecf8 55%, #5cc3d8 56%, #2f8fc4 100%); }
+.ck-flight.on { opacity: 1; }
+.ck-plane { position: absolute; top: 34%; left: -30%; width: 28vw; animation: ck-fly 3.4s ease-in-out forwards; }
+.ck-plane canvas { width: 100%; height: auto; transform: scaleX(-1); }
+@keyframes ck-fly { 0% { left: -30%; transform: translateY(20px) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(2deg); } 100% { left: 105%; transform: translateY(0) rotate(0); } }
+.ck-cloud { position: absolute; left: 110%; width: 180px; height: 60px; border-radius: 60px; background: rgba(255, 255, 255, 0.9); box-shadow: 40px -18px 0 6px rgba(255, 255, 255, 0.9), -40px -8px 0 0 rgba(255, 255, 255, 0.9); animation: ck-cloud 4s linear infinite; }
+@keyframes ck-cloud { to { left: -30%; } }
+/* 起名输入框 */
+.prompt-box { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); padding: 18px 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; z-index: 30;
+  background: #fbf5e2; border-radius: 22px; box-shadow: 0 0 0 4px #efe0b8, 0 10px 30px rgba(60, 40, 20, 0.25); color: #6b5238; }
+.prompt-box .pt { font-size: 18px; color: #e0892e; }

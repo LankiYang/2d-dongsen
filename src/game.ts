@@ -21,7 +21,7 @@ export class Game {
   time = 0
   switching = false
   meStart = { x: 0, y: 0 }
-  private factories: Record<SceneId | 'title', () => Scene> = {} as any
+  private factories: Record<string, (id: string) => Scene> = {}
 
   constructor(public app: Application, public assets: GameAssets, public net: Net, public input: Input, public audio: Audio, public hud: Hud) {
     net.on('inv', m => {
@@ -65,11 +65,13 @@ export class Game {
     input.typing = () => hud.typing() || hud.modalOpen()
   }
 
-  register(id: SceneId | 'title', make: () => Scene) { this.factories[id] = make }
+  // id 可以是完整的场景名，也可以是「isle:」这样的前缀（工厂拿到完整的场景名）
+  register(id: SceneId | 'title' | 'isle:' | 'tent:', make: (id: string) => Scene) { this.factories[id] = make }
 
   start(id: SceneId | 'title') {
     this.sceneId = id
-    this.scene = this.factories[id]()
+    const make = this.factories[id] ?? this.factories[id.slice(0, id.indexOf(':') + 1)]
+    this.scene = make(id)
     this.scene.resize(this.app.canvas.width, this.app.canvas.height)
   }
 
