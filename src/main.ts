@@ -23,6 +23,8 @@ import { TouchControls, isTouchDevice } from './ui/touch.ts'
 TextureSource.defaultOptions.scaleMode = 'nearest'
 
 const SAVE_KEY = 'dongsen2d'
+// 从潮汐港独立出来以前，5192 端口上的存档键叫 tidehaven（同一个存档世界），搬过来一次，玩家不用重新建角色
+if (!localStorage.getItem(SAVE_KEY) && localStorage.getItem('tidehaven')) localStorage.setItem(SAVE_KEY, localStorage.getItem('tidehaven')!)
 const setLoading = (p: number) => { (document.querySelector('#loading .bar i') as HTMLElement).style.width = `${Math.round(p * 100)}%` }
 
 async function boot() {
