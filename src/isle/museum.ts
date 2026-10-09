@@ -23,9 +23,9 @@ const museumRoom = (id: number): Room => ({
 
 // 展柜：类型、位置（底边中间，像素）、装哪几件
 type Case = { kind: 'tank' | 'bugs' | 'fossils', x: number, y: number, items: string[], spr: Sprite[] }
-const TANK_SLOTS: [number, number][] = [[-11, -27], [9, -31], [-6, -18], [11, -19]]
+const TANK_SLOTS: [number, number][] = [[-14, -21], [10, -24], [-4, -14], [16, -14]]
 const BUG_SLOTS: [number, number][] = [[-8, -25], [8, -20], [0, -33]]
-const FOSSIL_SLOTS: [number, number][] = [[-6, -21], [6, -22]]
+const FOSSIL_SLOTS: [number, number][] = [[-6, -17], [6, -18]]
 
 export class MuseumScene extends RoomScene {
   private cases: Case[] = []

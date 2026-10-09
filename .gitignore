@@ -21,3 +21,4 @@ tools/_*
 tools/.bot-tokens.json
 # 早期测试时 pixelize 输出的中间文件，构建不使用
 art/sprites/
+art/raw/_iso_bak/

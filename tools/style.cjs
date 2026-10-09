@@ -58,7 +58,8 @@ const HD_CORE =
   'flat colors with gentle soft cel shading (one soft shadow tone and one soft highlight per surface) and very subtle smooth gradients, soft even daylight from the top-left, ' +
   'a clean smooth closed outline of even medium thickness around the whole silhouette, tinted a darker shade of the local color (never black), thinner soft inner lines, ' +
   'simple clean surfaces, no texture noise, no grain, no dithering, uncluttered and readable'
-const HD_LAND = `${HD_CORE}, three-quarter top-down view like a cozy life-sim game, grounded object`
+// 视角：正视角（2026-10-09 用户纠正：我们是正视角，不是等轴侧）。正面平行于屏幕，顶面只露出窄窄一条，看不到侧面，没有透视
+const HD_LAND = `${HD_CORE}, straight front view like a classic 2D top-down RPG such as Stardew Valley: the front face is flat and parallel to the screen, the top seen slightly from above as a thin strip, symmetric, no side faces visible, no perspective, NOT isometric, NOT three-quarter, NOT seen from a corner, grounded object`
 const HD_ICON = `${HD_CORE}, single inventory icon, centered, chunky and readable at small size`
 const HD_SCENE =
   'beautiful smooth 2D key art for a cozy island-life game, ' + HD_CORE +
